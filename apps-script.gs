@@ -96,7 +96,7 @@ function doPost(e) {
     if (body && body.action === 'set_facilitador') {
       return setFacilitador_(body);
     }
-    // Branch: confirmación de lista de estudiantes (confirmacion.html).
+    // Branch: confirmación de lista de estudiantes (c.html).
     if (body && body.action === 'confirmar_lista') {
       return confirmarLista_(body);
     }
