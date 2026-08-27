@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encuesta de Clima de Aula · Confirmación de lista de estudiantes</title>
+<style>
+:root{--azul:#2563a8;--verde:#1f7a4d;--rojo:#b4232a;--fondo:#f4f6f9;--linea:#dde4ec;--texto:#1d2733;--mut:#64748b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--texto);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:28px 16px 60px}
+header{margin-bottom:20px}
+h1{font-size:1.35rem;margin:0 0 6px;color:var(--azul)}
+.sub{color:var(--mut);font-size:.95rem;margin:0}
+.card{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:20px;margin-bottom:16px}
+label{display:block;font-weight:600;font-size:.9rem;margin:12px 0 4px}
+input[type=text],input[type=tel]{width:100%;padding:10px 12px;border:1px solid var(--linea);border-radius:8px;font-size:1rem}
+button{background:var(--azul);color:#fff;border:0;border-radius:8px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+button.sec{background:#fff;color:var(--azul);border:1px solid var(--azul)}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{padding:9px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:middle}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.num{color:var(--mut);font-variant-numeric:tabular-nums}
+.radio-group{display:flex;gap:6px}
+.radio-group label{display:inline-flex;align-items:center;gap:4px;font-weight:500;margin:0;padding:6px 10px;border:1px solid var(--linea);border-radius:8px;cursor:pointer;font-size:.9rem}
+.radio-group input{accent-color:var(--azul)}
+.radio-group label.si-on{background:#dcf3e6;border-color:var(--verde);color:var(--verde);font-weight:700}
+.radio-group label.no-on{background:#fbe3e4;border-color:var(--rojo);color:var(--rojo);font-weight:700}
+td input.curso{width:90px;padding:7px 8px}
+td input.curso:disabled{background:#f1f4f8;border-style:dashed}
+.msg{padding:12px 14px;border-radius:8px;margin:12px 0;font-size:.95rem;display:none}
+.msg.err{display:block;background:#fbe3e4;color:var(--rojo)}
+.msg.ok{display:block;background:#dcf3e6;color:var(--verde)}
+.pending{color:var(--rojo);font-weight:700}
+.done-chip{background:#dcf3e6;color:var(--verde);border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700}
+.footer-note{color:var(--mut);font-size:.85rem;margin-top:18px}
+.hidden{display:none}
+.progress{font-size:.9rem;color:var(--mut);margin:8px 0 0}
+@media (max-width:640px){
+  .radio-group label{padding:6px 8px}
+  th:nth-child(1),td:nth-child(1){display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Confirmación de lista de estudiantes — Encuesta de Clima de Aula 2026</h1>
+  <p class="sub">Indique, para cada estudiante de la lista, si continúa en la institución y en qué curso está este año. Toma unos pocos minutos y esta información hace parte de los datos del estudio.</p>
+</header>
+
+<div class="card" id="loginCard">
+  <label for="inpDane">Código DANE de la sede (14 dígitos)</label>
+  <input type="text" id="inpDane" inputmode="numeric" placeholder="p. ej. 11100101190802">
+  <label for="inpCode">Código de acceso (viene en el correo de invitación)</label>
+  <input type="text" id="inpCode" autocapitalize="characters" placeholder="p. ej. K7M3QX">
+  <div class="msg err" id="loginErr"></div>
+  <p style="margin-top:16px"><button id="btnLoad">Ver la lista de mi colegio</button></p>
+</div>
+
+<div class="card hidden" id="listCard">
+  <h2 id="colegioName" style="margin:0 0 4px;font-size:1.1rem"></h2>
+  <p class="sub" id="listMeta"></p>
+  <div style="overflow-x:auto;margin-top:12px">
+  <table>
+    <thead><tr><th>#</th><th>Estudiante</th><th>Curso en 2025</th><th>¿Continúa en el colegio?</th><th>Curso actual (2026)</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  </div>
+  <div class="progress" id="progress"></div>
+
+  <label for="inpContacto" style="margin-top:20px">Nombre de quien diligencia</label>
+  <input type="text" id="inpContacto" placeholder="Nombre y cargo">
+  <label for="inpTel">Teléfono de contacto</label>
+  <input type="tel" id="inpTel" inputmode="numeric" placeholder="3001234567">
+
+  <div class="msg err" id="sendErr"></div>
+  <div class="msg ok" id="sendOk"></div>
+  <p style="margin-top:16px">
+    <button id="btnSend">Enviar confirmación</button>
+    <button class="sec" id="btnBack" style="margin-left:8px">← Cambiar de colegio</button>
+  </p>
+  <p class="footer-note">Si un estudiante no aparece o hay un error en un nombre, escríbanos respondiendo al correo de invitación. La información se maneja de forma confidencial y se usa únicamente con fines del estudio.</p>
+</div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = "PASTE_DEPLOYMENT_URL_HERE"; // misma URL que index.html
+
+let estudiantes = [];
+const $ = id => document.getElementById(id);
+
+function qs(name){ return new URLSearchParams(location.search).get(name) || ""; }
+
+async function loadRoster(dane, code){
+  $("loginErr").className = "msg err"; $("loginErr").style.display = "none";
+  const btn = $("btnLoad"); btn.disabled = true; btn.textContent = "Cargando…";
+  try{
+    const res = await fetch(`${APPS_SCRIPT_URL}?tipo=roster&dane=${encodeURIComponent(dane)}&code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+    if(!data.ok){
+      const msgs = {codigo_invalido:"El código de acceso no coincide con este colegio.",
+                    colegio_no_encontrado:"No encontramos un colegio con ese código DANE.",
+                    roster_no_cargado:"La lista aún no está disponible. Intente más tarde.",
+                    missing_fields:"Complete el DANE y el código de acceso."};
+      throw new Error(msgs[data.error] || ("Error: " + data.error));
+    }
+    estudiantes = data.estudiantes;
+    renderList(data.colegio, data.confirmados || {});
+    $("loginCard").classList.add("hidden");
+    $("listCard").classList.remove("hidden");
+  }catch(err){
+    $("loginErr").textContent = err.message || "No se pudo cargar la lista. Revise su conexión.";
+    $("loginErr").style.display = "block";
+  }finally{ btn.disabled = false; btn.textContent = "Ver la lista de mi colegio"; }
+}
+
+function renderList(colegio, done){
+  $("colegioName").textContent = colegio;
+  const yaConf = Object.keys(done).length;
+  $("listMeta").textContent = `${estudiantes.length} estudiantes en la lista` +
+    (yaConf ? ` · ya se había enviado una confirmación (${yaConf} estudiantes); puede enviarla de nuevo y tomaremos la más reciente.` : "");
+  const tb = $("tbody"); tb.innerHTML = "";
+  estudiantes.forEach((e,i)=>{
+    const prev = done[e.id];
+    const tr = document.createElement("tr");
+    tr.dataset.id = e.id;
+    tr.innerHTML = `<td class="num">${i+1}</td><td>${e.nombre}</td><td class="num">${e.clase||""}</td>
+      <td><div class="radio-group">
+        <label><input type="radio" name="c${i}" value="SI">Sí</label>
+        <label><input type="radio" name="c${i}" value="NO">No</label>
+      </div></td>
+      <td><input type="text" class="curso" placeholder="p. ej. 802" disabled></td>`;
+    const radios = tr.querySelectorAll("input[type=radio]");
+    const curso = tr.querySelector(".curso");
+    radios.forEach(r => r.addEventListener("change", ()=>{
+      const si = tr.querySelector("input[value=SI]").checked;
+      curso.disabled = !si; if(!si) curso.value = "";
+      tr.querySelectorAll(".radio-group label").forEach(l=>l.classList.remove("si-on","no-on"));
+      const lab = tr.querySelector(`input[value=${si?"SI":"NO"}]`).closest("label");
+      lab.classList.add(si ? "si-on" : "no-on");
+      updateProgress();
+    }));
+    if(prev){
+      const val = prev.continua === "SI" ? "SI" : "NO";
+      const r = tr.querySelector(`input[value=${val}]`); r.checked = true;
+      r.dispatchEvent(new Event("change"));
+      if(val==="SI") curso.value = prev.curso || "";
+    }
+    tb.appendChild(tr);
+  });
+  updateProgress();
+}
+
+function collect(){
+  const items = [];
+  document.querySelectorAll("#tbody tr").forEach(tr=>{
+    const si = tr.querySelector("input[value=SI]").checked;
+    const no = tr.querySelector("input[value=NO]").checked;
+    if(!si && !no) return;
+    items.push({ id: tr.dataset.id, continua: si ? "SI" : "NO", curso: tr.querySelector(".curso").value.trim() });
+  });
+  return items;
+}
+
+function updateProgress(){
+  const n = collect().length;
+  $("progress").innerHTML = n === estudiantes.length
+    ? `<span class="done-chip">✓ ${n} de ${estudiantes.length} marcados</span>`
+    : `Marcados <b>${n}</b> de <b>${estudiantes.length}</b> — <span class="pending">faltan ${estudiantes.length-n}</span>`;
+}
+
+$("btnLoad").addEventListener("click", ()=> loadRoster($("inpDane").value.trim(), $("inpCode").value.trim().toUpperCase()));
+$("btnBack").addEventListener("click", ()=>{ $("listCard").classList.add("hidden"); $("loginCard").classList.remove("hidden"); });
+
+$("btnSend").addEventListener("click", async ()=>{
+  $("sendErr").style.display = "none"; $("sendOk").style.display = "none";
+  const items = collect();
+  if(items.length < estudiantes.length){
+    $("sendErr").textContent = `Faltan ${estudiantes.length - items.length} estudiantes por marcar.`;
+    $("sendErr").style.display = "block"; return;
+  }
+  const sinCurso = items.filter(it => it.continua === "SI" && !it.curso).length;
+  if(sinCurso){
+    $("sendErr").textContent = `Hay ${sinCurso} estudiante(s) marcados "Sí" sin curso actual. Si no conoce el curso exacto, escriba el grado (p. ej. "8").`;
+    $("sendErr").style.display = "block"; return;
+  }
+  const contacto = $("inpContacto").value.trim(), telefono = $("inpTel").value.trim();
+  if(!contacto){ $("sendErr").textContent = "Indique el nombre de quien diligencia."; $("sendErr").style.display = "block"; return; }
+  const btn = $("btnSend"); btn.disabled = true; btn.textContent = "Enviando…";
+  try{
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST", headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify({ action:"confirmar_lista", dane: $("inpDane").value.trim(),
+        code: $("inpCode").value.trim().toUpperCase(), contacto, telefono, items })
+    });
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.error);
+    $("sendOk").textContent = `¡Gracias! Confirmación recibida (${data.guardados} estudiantes). Recuerde que estos estudiantes deben estar avisados y listos el día reservado.`;
+    $("sendOk").style.display = "block";
+    btn.textContent = "Enviada ✓";
+  }catch(err){
+    $("sendErr").textContent = "No se pudo enviar: " + (err.message || err) + ". Intente de nuevo.";
+    $("sendErr").style.display = "block";
+    btn.disabled = false; btn.textContent = "Enviar confirmación";
+  }
+});
+
+// Autollenar desde el enlace del correo: ?d=<dane>&c=<código>
+const d = qs("d"), c = qs("c");
+if(d) $("inpDane").value = d;
+if(c) $("inpCode").value = c.toUpperCase();
+if(d && c) loadRoster(d, c.toUpperCase());
+</script>
+</body>
+</html>

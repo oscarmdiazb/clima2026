@@ -1,0 +1,3388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Encuesta de Clima de Aula · Seguimiento 2026 — Reserva de visita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --primary: #0f4c81;
+    --primary-hover: #0c3d68;
+    --available: #d1fae5;
+    --available-text: #065f46;
+    --partial: #fef3c7;
+    --partial-text: #92400e;
+    --low: #fed7aa;
+    --low-text: #9a3412;
+    --full: #f3f4f6;
+    --full-text: #9ca3af;
+    --error: #dc2626;
+    --success: #059669;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  .brand {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--primary);
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 8px 0 12px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .lead {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 680px;
+  }
+
+  .instructions {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin: 24px 0;
+    box-shadow: var(--shadow);
+  }
+
+  .instructions h2 {
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  .steps {
+    list-style: none;
+    counter-reset: step;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .steps li {
+    counter-increment: step;
+    padding-left: 38px;
+    position: relative;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: -2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .steps li strong {
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 800;
+    font-size: 14px;
+  }
+
+  .calendar-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .week-label {
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--text);
+  }
+
+  .week-nav {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .week-jump {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 13px;
+    min-width: 220px;
+    max-width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .week-jump:hover {
+    border-color: var(--primary);
+  }
+
+  .week-jump:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.12);
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+    color: var(--text);
+    transition: all 0.15s;
+    font-size: 13px;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    background: var(--bg);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .calendar-body {
+    overflow-x: auto;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 80px repeat(5, minmax(130px, 1fr));
+    min-width: 750px;
+  }
+
+  .grid-cell {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+    min-height: 38px;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .grid-cell:nth-child(6n) { border-right: none; }
+
+  .day-header {
+    padding: 12px 8px;
+    background: var(--bg);
+    text-align: center;
+    font-weight: 700;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .day-header .day-name {
+    text-transform: capitalize;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+  }
+
+  .day-header .day-num {
+    font-size: 17px;
+    color: var(--text);
+    margin-top: 2px;
+    font-weight: 800;
+  }
+
+  .day-header.today .day-num { color: var(--primary); }
+  .day-header.today { background: #eef4fa; }
+
+  .corner-cell {
+    background: var(--bg);
+  }
+
+  .time-label {
+    padding: 0 10px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    background: var(--bg);
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .slot {
+    flex: 1;
+    padding: 6px 4px;
+    cursor: pointer;
+    transition: background 0.12s;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: var(--available);
+    color: var(--available-text);
+    border: 0;
+    font-family: inherit;
+    line-height: 1.15;
+    gap: 3px;
+  }
+
+  .slot:hover:not(:disabled) {
+    background: #a7f3d0;
+  }
+
+  .slot.partial { background: var(--partial); color: var(--partial-text); }
+  .slot.partial:hover:not(:disabled) { background: #fde68a; }
+  .slot.low { background: var(--low); color: var(--low-text); }
+  .slot.low:hover:not(:disabled) { background: #fdba74; }
+
+  .slot.full {
+    background: var(--full);
+    color: var(--full-text);
+    cursor: not-allowed;
+  }
+
+  /* Booking chips shown inside an already-reserved slot */
+  .booking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 2px 0;
+  }
+
+  .booking-chip {
+    background: rgba(255,255,255,0.55);
+    color: #1f2937;
+    font-size: 10.5px;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 2px 5px;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .slot.full .booking-chip {
+    background: rgba(255,255,255,0.9);
+    color: var(--text);
+  }
+
+  .slot-cupos {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  .slot.has-bookings .slot-cupos {
+    border-top: 1px dashed rgba(0,0,0,0.12);
+    padding-top: 3px;
+    margin: 2px 4px 0;
+  }
+
+  .slot.past {
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 4px,
+      #f3f4f6 4px,
+      #f3f4f6 8px
+    );
+    color: transparent;
+    cursor: default;
+  }
+
+  /* Status / Loading */
+  .status {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: 12px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    padding: 20px 24px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .modal-subtitle {
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .modal-body { padding: 20px 24px 4px; }
+
+  .form-row { margin-bottom: 16px; }
+
+  .form-row label {
+    display: block;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .form-row input,
+  .form-row select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    background: var(--card);
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .form-row input:focus,
+  .form-row select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.12);
+  }
+
+  .form-row select:disabled {
+    background: var(--bg);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .btn-secondary:hover { background: var(--bg); }
+
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+  .btn-primary:disabled { opacity: 0.6; cursor: wait; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    background: var(--text);
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    font-weight: 700;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+    z-index: 200;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--error); }
+  .toast.success { background: var(--success); }
+
+  .form-error {
+    color: var(--error);
+    font-size: 13px;
+    padding: 10px 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: none;
+    font-weight: 600;
+  }
+
+  .form-error.show { display: block; }
+
+  .aula-warning {
+    color: #92400e;
+    font-size: 13px;
+    padding: 10px 12px;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: none;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .aula-warning.show { display: block; }
+  .aula-warning strong { color: #78350f; font-weight: 800; }
+
+  .assignment-info {
+    font-size: 13px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: none;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .assignment-info.show { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+
+  .assignment-info.matched {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+  }
+
+  .assignment-info.mismatched {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+  }
+
+  .assignment-info strong { font-weight: 800; }
+
+  .assignment-info .jump-btn {
+    background: var(--primary);
+    color: #fff;
+    border: 0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .assignment-info .jump-btn:hover { background: var(--primary-hover); }
+
+  .block-summary {
+    background: #eef4fa;
+    border: 1px solid #cfe0f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .block-summary-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+
+  .block-summary-time {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .block-summary-day {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-top: 2px;
+    text-transform: capitalize;
+  }
+  .block-summary-aula {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed #cfe0f0;
+    text-align: center;
+  }
+  .confirm-aula-colegio {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .confirm-aula-meta {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .config-warning {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin: 16px 0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .logistics-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #eef4fa;
+    border: 1px solid #cfe0f0;
+    color: #0c3d68;
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin: 16px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .logistics-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+
+  .logistics-text { flex: 1; }
+  .logistics-text strong { color: var(--primary); font-weight: 800; }
+
+  /* ---- "How it works" card (top of page) ---- */
+  .how-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    margin: 16px 0;
+  }
+  .how-steps {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .how-steps li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .how-icon {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .how-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--text);
+  }
+  .how-text strong { color: var(--text); font-weight: 800; }
+  .how-text em { font-style: normal; color: var(--primary); font-weight: 700; }
+
+  /* ----- Confirmation modal (post-reservation) ----- */
+  .confirm-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 16px;
+    animation: cm-fade 0.2s ease-out;
+  }
+  .confirm-modal-backdrop[hidden] { display: none !important; }
+
+  @keyframes cm-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes cm-pop  { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .confirm-modal {
+    background: var(--card);
+    border-radius: 14px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 25px 60px -10px rgba(0,0,0,0.30);
+    padding: 28px 24px 22px;
+    text-align: center;
+    max-height: 92vh;
+    overflow-y: auto;
+    animation: cm-pop 0.22s ease-out;
+  }
+  .confirm-modal-check {
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 32px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .confirm-modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+  }
+
+  .confirm-modal-details {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    text-align: left;
+  }
+  .cm-row {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 5px 0;
+    font-size: 14px;
+  }
+  .cm-row + .cm-row { border-top: 1px dashed var(--border); }
+  .cm-label {
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 10.5px;
+    min-width: 46px;
+  }
+  .cm-val {
+    flex: 1;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: capitalize;
+  }
+  .cm-val-aula { font-weight: 700; text-transform: none; line-height: 1.3; font-size: 13px; }
+
+  .confirm-modal-reminder {
+    display: flex;
+    gap: 12px;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 18px;
+    text-align: left;
+    align-items: center;
+  }
+  .cm-reminder-icon { font-size: 24px; flex-shrink: 0; }
+  .cm-reminder-body { flex: 1; }
+  .cm-reminder-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #78350f;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+  .cm-reminder-btn {
+    display: inline-block;
+    background: #f59e0b;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .cm-reminder-btn:hover { background: #d97706; }
+
+  .confirm-modal-close {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  /* Inline download link inside step 5 */
+  .inline-download {
+    display: inline-block;
+    margin-left: 6px;
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .inline-download:hover { color: var(--primary-hover); }
+
+  /* Discreet "why send the consent" note under step 5 */
+  .consent-why {
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: #fef3c7;
+    border-left: 3px solid #fcd34d;
+    border-radius: 6px;
+    color: #92400e;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .whatsapp-cta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #065f46;
+    font-size: 13.5px;
+    font-weight: 700;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .whatsapp-cta:hover { background: #a7f3d0; }
+  .whatsapp-cta:active { transform: scale(0.99); }
+  .whatsapp-cta .wa-icon { font-size: 18px; flex-shrink: 0; }
+  .whatsapp-cta .wa-text { flex: 1; line-height: 1.35; }
+  .whatsapp-cta strong { white-space: nowrap; }
+
+  /* Reservations table (below calendar) */
+  .reservations-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-top: 24px;
+    overflow: hidden;
+  }
+
+  .reservations-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .reservations-header h2 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .reservations-summary {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .reservations-body {
+    max-height: 520px;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+
+  .reservations-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .reservations-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .reservations-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    z-index: 1;
+  }
+
+  .reservations-table tbody td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .reservations-table tbody tr:last-child td { border-bottom: none; }
+
+  /* Discrepancy row colors (admin view) */
+  .reservations-table tbody tr.disc-match    { /* no background — normal */ }
+  .reservations-table tbody tr.disc-soft     { background: #fef3c7; }       /* yellow: same week, diff day */
+  .reservations-table tbody tr.disc-hard     { background: #fee2e2; }       /* red:    different week */
+  .reservations-table tbody tr.disc-none     { background: #f9fafb; }       /* gray:   no assignment in tab */
+  .reservations-table tbody tr.disc-soft td:first-child  { border-left: 3px solid #f59e0b; }
+  .reservations-table tbody tr.disc-hard td:first-child  { border-left: 3px solid #dc2626; }
+
+  /* Duplicates still get a side accent (additive to the discrepancy row color) */
+  .reservations-table tbody tr.dup td:first-child {
+    border-left: 3px solid #f59e0b;
+  }
+
+  .reservations-table .col-delta {
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .reservations-table .delta-zero { color: #065f46; }
+  .reservations-table tr.disc-soft .col-delta { color: #92400e; }
+  .reservations-table tr.disc-hard .col-delta { color: #9a3412; font-weight: 800; }
+  .reservations-table .col-fecha-sel { font-weight: 700; }
+  .reservations-table .muted-cell { color: var(--muted); font-style: italic; }
+
+  /* ----- Month calendar view (internal monitoring) ----- */
+  .calendar-view-body { padding: 16px 20px 20px; overflow-x: auto; }
+  .month-block { margin-bottom: 26px; min-width: 640px; }
+  .month-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    text-transform: capitalize;
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 8px;
+    letter-spacing: 0.02em;
+  }
+  .month-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+  }
+  .mc-dow {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    padding: 6px 0;
+    background: var(--bg);
+    border-radius: 6px;
+  }
+  .mc-cell {
+    min-height: 76px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px;
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .mc-cell-empty { background: repeating-linear-gradient(45deg, #fafafa, #fafafa 5px, #f3f4f6 5px, #f3f4f6 10px); border-color: transparent; }
+  .mc-cell-outside { background: #fbfbfb; }
+  .mc-daynum { font-size: 11px; font-weight: 800; color: var(--muted); }
+  .mc-today .mc-daynum { color: var(--primary); }
+  .mc-today { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary) inset; }
+  .mc-chip {
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1.15;
+    padding: 3px 5px;
+    border-radius: 5px;
+    border: 1px solid rgba(0,0,0,0.06);
+    white-space: normal;
+    word-break: break-word;
+  }
+  /* Color by jornada */
+  .mc-chip.j-manana { background: #fde4d0; color: #7c2d12; }  /* mañana / única */
+  .mc-chip.j-tarde  { background: #d6e9fb; color: #0c3d68; }  /* tarde */
+  .mc-chip.j-pending {                                          /* asignado, sin reservar */
+    background: #f3f4f6; color: #9ca3af;
+    border-style: dashed; border-color: #d1d5db;
+  }
+  .mc-chip .mc-chip-aula { font-weight: 800; opacity: 0.85; }
+  .mc-chip .mc-chip-time { font-weight: 800; opacity: 0.7; margin-right: 3px; }
+  .mc-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .mc-legend-item { display: flex; align-items: center; gap: 6px; }
+  .mc-legend-swatch { width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.06); }
+
+  .reservations-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .reservations-table th.sortable:hover {
+    background: #e5edf5;
+    color: var(--primary);
+  }
+
+  .reservations-table .col-icon {
+    width: 28px;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .reservations-table .col-icon[title]:hover { cursor: help; }
+
+  .reservations-table .col-colegio {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .reservations-table .col-aula {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .reservations-table .col-fecha {
+    white-space: nowrap;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .reservations-table .col-hora {
+    white-space: nowrap;
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  /* ----- School search (autocomplete) ----- */
+  .search-wrap { position: relative; }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 15px; pointer-events: none; opacity: 0.6;
+  }
+  #schoolSearch {
+    width: 100%;
+    padding: 11px 38px 11px 38px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    background: var(--card);
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  #schoolSearch:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.12);
+  }
+  .search-clear {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    width: 26px; height: 26px; border: 0; border-radius: 50%;
+    background: var(--bg); color: var(--muted); font-size: 18px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .search-clear:hover { background: var(--border); color: var(--text); }
+  .search-results {
+    position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    max-height: 320px; overflow-y: auto;
+    z-index: 50;
+  }
+  .search-results[hidden] { display: none; }
+  .search-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-item:last-child { border-bottom: 0; }
+  .search-item:hover, .search-item.active { background: #eef4fa; }
+  .search-item-name { font-weight: 800; font-size: 14px; color: var(--text); line-height: 1.25; }
+  .search-item-meta { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .search-item mark { background: #fde68a; color: inherit; padding: 0 1px; border-radius: 2px; }
+  .search-empty { padding: 14px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 600; }
+
+  .search-divider {
+    display: flex; align-items: center; text-align: center;
+    color: var(--muted); font-size: 12px; font-weight: 700;
+    margin: 14px 0 4px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .search-divider::before, .search-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .search-divider span { padding: 0 12px; }
+
+  /* ----- New step-card flow ----- */
+  .step-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    margin: 16px 0;
+  }
+  .step-card[hidden] { display: none; }
+
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .step-num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-head h2 {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text);
+  }
+
+  /* Assigned-date banner */
+  .assigned-banner {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .assigned-banner-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #065f46;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .assigned-banner-date {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 4px 0 6px;
+    text-transform: capitalize;
+    line-height: 1.2;
+  }
+  .assigned-banner-help {
+    font-size: 12.5px;
+    color: #065f46;
+    font-weight: 600;
+  }
+
+  /* Hour chips */
+  .chip-section { margin-bottom: 16px; }
+  .chip-section-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .chip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+  .chip {
+    background: var(--available);
+    color: var(--available-text);
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 6px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.1s, box-shadow 0.15s;
+    line-height: 1.2;
+    min-height: 58px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  .chip-time { font-size: 13px; font-weight: 800; letter-spacing: -0.01em; }
+  .chip-cupos { font-size: 11px; font-weight: 600; opacity: 0.85; }
+  .chip:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.10);
+  }
+  .chip:active:not(:disabled) { transform: translateY(0); }
+  .chip.partial { background: var(--partial); color: var(--partial-text); }
+  .chip.low     { background: var(--low);     color: var(--low-text); }
+  .chip.full    { background: var(--full);    color: var(--full-text); cursor: not-allowed; }
+  .chip.past    { background: repeating-linear-gradient(45deg, transparent, transparent 4px, #f3f4f6 4px, #f3f4f6 8px); color: var(--full-text); cursor: not-allowed; }
+  .chip.selected {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(15,76,129,0.20);
+  }
+
+  /* Link-style button (no background) */
+  .btn-link {
+    background: transparent;
+    border: 0;
+    color: var(--primary);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    padding: 12px 4px;
+    margin-top: 8px;
+    text-align: left;
+  }
+  .btn-link:hover { text-decoration: underline; }
+
+  /* Day-chip grid (week-fallback sub-step A) */
+  .day-chip-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  .chip.day-chip {
+    min-height: 78px;
+    padding: 12px 8px;
+    gap: 2px;
+  }
+  .day-chip-name {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+  .day-chip-date {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .day-chip-meta {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+
+  /* "All dates" listing — one block per week */
+  .week-block { margin-bottom: 18px; }
+  .week-block .chip-section-label { margin-bottom: 8px; text-transform: none; font-size: 12px; }
+
+  /* Warning shown when the assigned date is already full */
+  .assigned-full-warning {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .assigned-full-warning[hidden] { display: none !important; }
+
+  /* Header above hour chips once a day is picked */
+  .picked-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: var(--bg);
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin: 14px 0;
+  }
+  .picked-day-label {
+    font-weight: 800;
+    color: var(--text);
+    text-transform: capitalize;
+    font-size: 15px;
+  }
+
+  /* Already-booked panel */
+  .already-booked {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  /* Critical: HTML `hidden` attribute must override display:flex above */
+  .already-booked[hidden] { display: none !important; }
+  .already-booked-icon {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #9a3412;
+    color: #fff;
+    font-weight: 800;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .already-booked-title { font-weight: 800; color: #9a3412; font-size: 15px; }
+  .already-booked-time { color: var(--text); font-weight: 700; margin-top: 2px; text-transform: capitalize; }
+  .already-booked-actions { margin: 10px 0 8px; }
+  .already-booked-help { font-size: 13px; color: #92400e; margin-top: 6px; }
+
+  /* Fallback (mini-week) header */
+  .fallback-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0 12px;
+  }
+  .fallback-header h3 {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .muted-note { color: var(--muted); font-size: 12.5px; margin-top: 12px; font-weight: 600; }
+
+  .wa-inline-link {
+    color: #047857;
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .wa-inline-link:hover { color: #065f46; }
+
+  /* Form actions row */
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .form-actions .btn-primary { flex: 1; min-width: 160px; }
+
+  /* Reservations table → <details> wrapper */
+  .reservations-card[open] { padding-bottom: 0; }
+  .reservations-card summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+  }
+  .reservations-card[open] summary { border-bottom-color: var(--border); }
+  .reservations-card summary::-webkit-details-marker { display: none; }
+  .reservations-summary-text { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .reservations-summary-text strong { font-size: 15px; color: var(--text); }
+  .reservations-card .reservations-summary { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .reservations-chevron {
+    font-size: 16px;
+    color: var(--muted);
+    transition: transform 0.15s;
+  }
+  .reservations-card[open] .reservations-chevron { transform: rotate(180deg); }
+
+  @media (max-width: 640px) {
+    .container { padding: 20px 12px 40px; }
+    h1 { font-size: 22px; }
+    .lead { font-size: 14px; }
+    .step-card { padding: 18px 16px; }
+    .step-head h2 { font-size: 16px; }
+    .assigned-banner-date { font-size: 18px; }
+    .chip-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+    .chip { padding: 8px 4px; min-height: 52px; }
+    .chip-time { font-size: 12px; }
+    .chip-cupos { font-size: 10.5px; }
+    .calendar-header { padding: 12px 14px; }
+    .legend { padding: 10px 14px; gap: 10px; }
+    .week-label { font-size: 14px; }
+    .nav-btn { padding: 6px 10px; font-size: 12px; }
+    .reservations-table thead th,
+    .reservations-table tbody td { padding: 8px 10px; font-size: 12px; }
+    .form-actions { flex-direction: column-reverse; }
+    .form-actions .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="brand">OCE-SED · Encuesta de clima de aula</div>
+    <h1>Reserva el horario de la visita de seguimiento — Encuesta de Clima de Aula 2026</h1>
+    <p class="lead">A cada aula se le asignó un día por logística. Solo necesitas elegir la hora.</p>
+  </header>
+
+  <section class="how-card">
+    <ol class="how-steps">
+      <li>
+        <div class="how-icon" aria-hidden="true">1</div>
+        <div class="how-text">
+          <strong>Identifica tu aula</strong> (localidad → colegio · jornada · curso). Verás la <em>fecha asignada</em>.
+        </div>
+      </li>
+      <li>
+        <div class="how-icon" aria-hidden="true">2</div>
+        <div class="how-text">
+          <strong>Elige la hora en esa fecha.</strong> Si el aula realmente no puede ese día, hay opción de elegir otro día de la misma semana — pero agradecemos cumplir la fecha asignada por logística.
+        </div>
+      </li>
+      <li>
+        <div class="how-icon" aria-hidden="true">3</div>
+        <div class="how-text">
+          <strong>Confirma tu reserva.</strong> El equipo encuestador se comunicará para coordinar la logística. La encuesta toma <strong>un solo bloque de clase</strong>. El equipo lleva todos los materiales (celulares y audífonos): el colegio no necesita internet ni computadores, solo un espacio sin interrupciones.
+        </div>
+      </li>
+      <li>
+        <div class="how-icon" aria-hidden="true">4</div>
+        <div class="how-text">
+          <strong>Los materiales para la encuesta los lleva el equipo encuestador.</strong> Por favor garantizar acceso al salón en la fecha y hora reservadas.
+        </div>
+      </li>
+      <li>
+        <div class="how-icon" aria-hidden="true">5</div>
+        <div class="how-text">
+          <strong>Recuerda hacer llegar a los acudientes el documento de notificación a familias.</strong>
+          <a href="notificacion-familias.pdf?v=1" download="notificacion-familias-encuesta-clima-aula.pdf" class="inline-download">Descárgalo aquí ⬇</a>
+        </div>
+      </li>
+    </ol>
+
+    <a class="whatsapp-cta" href="https://wa.me/573019597822" target="_blank" rel="noopener">
+      <span class="wa-icon" aria-hidden="true">💬</span>
+      <span class="wa-text">¿Dudas? Escríbenos al WhatsApp del proyecto · <strong>+57 301 959 78 22</strong></span>
+    </a>
+  </section>
+
+  <div id="configWarning" class="config-warning" style="display:none">
+    ⚠️ La URL de Apps Script no está configurada. Edita la constante <code>APPS_SCRIPT_URL</code> en <code>index.html</code>.
+  </div>
+
+  <!-- =================================================================
+       Paso 1 — Identifícate
+       ================================================================= -->
+  <section class="step-card" id="step1Card">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <h2>Identifica tu aula</h2>
+    </div>
+
+    <div class="form-row search-row">
+      <label for="schoolSearch">Busca tu colegio por nombre</label>
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="text" id="schoolSearch" autocomplete="off"
+               placeholder="Escribe el nombre del colegio…" />
+        <button type="button" class="search-clear" id="schoolSearchClear" aria-label="Limpiar" hidden>×</button>
+        <div class="search-results" id="schoolSearchResults" hidden></div>
+      </div>
+    </div>
+
+    <div class="search-divider"><span>o busca por localidad</span></div>
+
+    <div class="form-row">
+      <label for="localidadSelect">Localidad</label>
+      <select id="localidadSelect" required>
+        <option value="">Selecciona la localidad…</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="schoolSelect">Colegio · Jornada · Aula</label>
+      <select id="schoolSelect" required disabled>
+        <option value="">Primero selecciona la localidad</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       Paso 2 — Hora / Calendario  (oculto hasta que se elija aula)
+       ================================================================= -->
+  <section class="step-card" id="step2Card" hidden>
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <h2 id="step2Title">Elige la hora</h2>
+    </div>
+
+    <!-- Aula ya tiene una reserva -->
+    <div class="already-booked" id="alreadyBookedBox" hidden>
+      <div class="already-booked-icon">✓</div>
+      <div style="flex:1">
+        <div class="already-booked-title">Esta aula ya tiene una reserva</div>
+        <div class="already-booked-time" id="alreadyBookedTime"></div>
+        <div class="already-booked-actions">
+          <button type="button" class="btn btn-primary" id="rescheduleBtn">Reprogramar cita</button>
+        </div>
+        <div class="already-booked-help">
+          ¿Necesitas cancelarla? Contacta al <a href="https://wa.me/573019597822" target="_blank" rel="noopener" class="wa-inline-link">WhatsApp del proyecto</a>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner de fecha asignada (modo "day-chips") -->
+    <div class="assigned-banner" id="assignedBanner" hidden>
+      <div class="assigned-banner-label">Tu fecha asignada es</div>
+      <div class="assigned-banner-date" id="assignedBannerDate">—</div>
+      <div class="assigned-banner-help">Elige el bloque de clases (la hora) que mejor le quede al aula ese día.</div>
+    </div>
+
+    <!-- Chips de horas para el día asignado -->
+    <div id="dayChipsContainer" hidden>
+      <div class="assigned-full-warning" id="assignedFullWarning" hidden>
+        ⚠️ Tu fecha asignada ya no tiene cupos disponibles. Por favor elige otra fecha más abajo.
+      </div>
+      <div class="chip-section" id="morningSection">
+        <h3 class="chip-section-label">Jornada mañana</h3>
+        <div class="chip-grid" id="morningChips"></div>
+      </div>
+      <div class="chip-section" id="afternoonSection">
+        <h3 class="chip-section-label">Jornada tarde</h3>
+        <div class="chip-grid" id="afternoonChips"></div>
+      </div>
+      <button type="button" class="btn-link" id="showWeekBtn">
+        ⌄ El aula no está disponible ese día — reservar otro día de la semana
+      </button>
+    </div>
+
+    <!-- Fallback semana: dos sub-pasos (elegir día → elegir hora) -->
+    <div id="weekFallbackContainer" hidden>
+      <div class="fallback-header">
+        <h3>Otro día de tu semana — <span id="weekFallbackLabel">—</span></h3>
+        <button type="button" class="btn-link" id="hideWeekBtn">← Volver a la fecha asignada</button>
+      </div>
+
+      <!-- Sub-paso A: elegir día de la semana asignada -->
+      <div id="weekDaysPicker">
+        <h4 class="chip-section-label">Elige el día</h4>
+        <div class="chip-grid day-chip-grid" id="weekDaysChips"></div>
+        <button type="button" class="btn-link" id="showAllDatesBtn">
+          ⌄ El aula tampoco puede esta semana — ver todas las fechas disponibles
+        </button>
+      </div>
+
+      <!-- Sub-paso B: elegir entre TODAS las fechas de la ventana -->
+      <div id="allDatesPicker" hidden>
+        <div class="picked-day-header">
+          <span class="picked-day-label">Todas las fechas disponibles</span>
+          <button type="button" class="btn-link" id="backToWeekDaysBtn">← Volver a mi semana</button>
+        </div>
+        <div id="allDatesByWeek"></div>
+      </div>
+
+      <!-- Sub-paso C: elegir hora del día escogido -->
+      <div id="weekHoursPicker" hidden>
+        <div class="picked-day-header">
+          <span class="picked-day-label" id="pickedDayLabel">—</span>
+          <button type="button" class="btn-link" id="backToDayPickerBtn">← Cambiar día</button>
+        </div>
+        <div class="chip-section">
+          <h3 class="chip-section-label">Jornada mañana</h3>
+          <div class="chip-grid" id="weekMorningChips"></div>
+        </div>
+        <div class="chip-section">
+          <h3 class="chip-section-label">Jornada tarde</h3>
+          <div class="chip-grid" id="weekAfternoonChips"></div>
+        </div>
+      </div>
+
+      <p class="muted-note">
+        Si ninguna de estas fechas te sirve, escríbenos al <a href="https://wa.me/573019597822" target="_blank" rel="noopener" class="wa-inline-link">WhatsApp del proyecto</a>.
+      </p>
+    </div>
+
+    <!-- Calendario completo (fallback cuando NO hay asignación para esta aula) -->
+    <div id="fullCalendarContainer" hidden>
+      <div class="calendar-header">
+        <div class="week-label" id="weekLabel">Cargando…</div>
+        <div class="week-nav">
+          <select class="week-jump" id="weekJump" aria-label="Saltar a una semana específica">
+            <option value="">Cargando semanas…</option>
+          </select>
+          <button class="nav-btn" id="prevWeek" type="button" aria-label="Semana anterior">←</button>
+          <button class="nav-btn" id="nextWeek" type="button" aria-label="Semana siguiente">→</button>
+        </div>
+      </div>
+      <div class="calendar-body" id="calendarBody">
+        <div class="status">
+          <div class="spinner"></div>
+          <div style="margin-top:14px">Cargando disponibilidad…</div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--available)"></span>4 cupos</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--partial)"></span>2–3 cupos</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--low)"></span>1 cupo</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--full)"></span>Sin cupo</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       Paso 3 — Confirma (form de contacto)
+       ================================================================= -->
+  <section class="step-card" id="step3Card" hidden>
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <h2 id="step3Title">Confirma tu reserva</h2>
+    </div>
+
+    <div class="block-summary">
+      <div class="block-summary-label" id="confirmSummaryLabel">Vas a reservar el bloque de 2 horas</div>
+      <div class="block-summary-time" id="confirmTimeText">—</div>
+      <div class="block-summary-day" id="confirmDayText">—</div>
+      <div class="block-summary-aula">
+        <div class="confirm-aula-colegio" id="confirmAulaColegio">—</div>
+        <div class="confirm-aula-meta" id="confirmAulaMeta">—</div>
+      </div>
+    </div>
+
+    <div class="form-error" id="formError"></div>
+
+    <div id="contactFields">
+      <div class="form-row">
+        <label for="contactInput">Contacto (docente o coordinador/a)</label>
+        <input type="text" id="contactInput" placeholder="Nombre completo" autocomplete="name" required />
+      </div>
+      <div class="form-row">
+        <label for="phoneInput">Teléfono</label>
+        <input type="tel" id="phoneInput" placeholder="Solo números (ej. 3001234567)" inputmode="numeric" pattern="[0-9]+" autocomplete="tel" required />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" id="changeSlotBtn">← Cambiar hora</button>
+      <button type="button" class="btn btn-primary" id="confirmBtn">Confirmar reserva</button>
+    </div>
+  </section>
+
+  <!-- Reservas confirmadas (colapsada por defecto) -->
+  <details class="reservations-card" id="reservationsCard">
+    <summary>
+      <span class="reservations-summary-text">
+        <strong>Reservas confirmadas</strong>
+        <span class="reservations-summary" id="reservationsSummary">—</span>
+      </span>
+      <span class="reservations-chevron">▾</span>
+    </summary>
+    <div class="reservations-body" id="reservationsBody">
+      <div class="reservations-empty">Cargando…</div>
+    </div>
+  </details>
+
+  <!-- Vista de calendario mensual (monitoreo interno) -->
+  <details class="reservations-card" id="calendarViewCard">
+    <summary>
+      <span class="reservations-summary-text">
+        <strong>Vista de calendario</strong>
+        <span class="reservations-summary" id="calendarViewSummary">monitoreo interno</span>
+      </span>
+      <span class="reservations-chevron">▾</span>
+    </summary>
+    <div class="calendar-view-body" id="monthCalendarBody">
+      <div class="reservations-empty">Cargando…</div>
+    </div>
+  </details>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Confirmation modal: appears after a successful booking -->
+<div class="confirm-modal-backdrop" id="confirmModal" hidden role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+  <div class="confirm-modal">
+    <div class="confirm-modal-check" aria-hidden="true">✓</div>
+    <h2 class="confirm-modal-title" id="confirmModalTitle">¡Tu cita está confirmada!</h2>
+
+    <div class="confirm-modal-details">
+      <div class="cm-row">
+        <span class="cm-label">Día</span>
+        <span class="cm-val" id="confirmModalDay">—</span>
+      </div>
+      <div class="cm-row">
+        <span class="cm-label">Hora</span>
+        <span class="cm-val" id="confirmModalTime">—</span>
+      </div>
+      <div class="cm-row">
+        <span class="cm-label">Aula</span>
+        <span class="cm-val cm-val-aula" id="confirmModalAula">—</span>
+      </div>
+    </div>
+
+    <div class="confirm-modal-reminder">
+      <div class="cm-reminder-icon" aria-hidden="true">📄</div>
+      <div class="cm-reminder-body">
+        <div class="cm-reminder-title">No olvides enviar la notificación a las familias</div>
+        <a href="notificacion-familias.pdf?v=1" download="notificacion-familias-encuesta-clima-aula.pdf" class="cm-reminder-btn">⬇ Descargar PDF</a>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary confirm-modal-close" id="confirmModalCloseBtn">Listo</button>
+  </div>
+</div>
+
+<script src="schools.js"></script>
+<script>
+// =====================================================================
+// CONFIG — edit these two constants and you're done.
+// =====================================================================
+
+// 1) Paste your Apps Script Web App deployment URL here.
+//    Deploy → New deployment → Web app → Execute as: me, Who has access: Anyone.
+const APPS_SCRIPT_URL = "PASTE_DEPLOYMENT_URL_HERE"; // despliegue NUEVO (Sheet propia del seguimiento) — ver SETUP.md
+
+// 2) School list — generated from "Final Treatment Assignment Round 3.csv".
+//    Each localidad maps to an array of { colegio, sede, jornada, clase, grado, dane }.
+//    Each colegio has exactly one (jornada, clase) pair from the sample.
+// SCHOOLS_BY_LOCALIDAD is defined in schools.js (loaded via <script src> above).
+
+// =====================================================================
+// (You normally don't need to edit anything below this line.)
+// =====================================================================
+
+const CAPACITY = 4;
+const SLOT_DURATION_HOURS = 2;
+// Minutes the team needs after a session before it can take another booking
+// (transit + setup buffer). 60 = 1h buffer, 120 = 2h buffer. Must be a multiple of 30.
+// IMPORTANT: this same value also lives at the top of apps-script.gs — keep them in sync.
+const BUFFER_MIN_AFTER = 60;
+const TEAM_BLOCK_MIN = SLOT_DURATION_HOURS * 60 + BUFFER_MIN_AFTER;
+const FIRST_START_HOUR = 6;     // 6:00 AM
+const LAST_START_HOUR = 17;     // 5:00 PM (last start; block ends at 7:00 PM)
+const TIMEZONE = "America/Bogota";
+
+// Calendar window: only allow reservations within [WINDOW_START, WINDOW_END].
+// Inclusive of both endpoints. Bogota local time. Month is 0-indexed.
+const WINDOW_START = new Date(2026, 8, 15);  // Sep 15, 2026 (martes)
+const WINDOW_END   = new Date(2026, 9, 30);  // Oct 30, 2026 (viernes) — nov reservado a revisitas
+
+const DAY_NAMES = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const MONTH_ABBR = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+
+// ----- State -----
+let bookings = {};            // { "YYYY-MM-DD HH:mm": count }
+let bookingDetails = {};      // { "YYYY-MM-DD HH:mm": [ { colegio, jornada, clase, localidad, sede } ] }
+let assignments = {};         // { "Colegio|Sede|Jornada|Clase": "YYYY-MM-DD" }
+let currentWeekStart = null;  // Monday of the displayed week, in Bogota local time
+let selectedSlot = null;
+
+// ----- Time helpers (Bogota) -----
+// Returns a Date whose Y-M-D / H:M values represent the current moment in Bogota.
+// (We use it as a "naive local" Date for comparisons against constructed slot Dates.)
+function nowInBogota() {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIMEZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(new Date()).map(p => [p.type, p.value]));
+  return new Date(+parts.year, +parts.month - 1, +parts.day,
+                  +parts.hour % 24, +parts.minute, +parts.second);
+}
+
+function startOfWeekMonday(d) {
+  const day = d.getDay(); // 0=Sun..6=Sat
+  const diff = (day === 0 ? -6 : 1 - day);
+  const r = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  r.setDate(r.getDate() + diff);
+  return r;
+}
+
+function addDays(d, n) {
+  const r = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+// First Monday whose Mon..Fri week intersects the window.
+// (e.g., if WINDOW_START is Saturday, we skip to the following Monday.)
+function windowFirstMonday() {
+  let d = new Date(WINDOW_START.getFullYear(), WINDOW_START.getMonth(), WINDOW_START.getDate());
+  while (d.getDay() === 0 || d.getDay() === 6) {
+    d.setDate(d.getDate() + 1);
+  }
+  return startOfWeekMonday(d);
+}
+
+// Last Monday whose Mon..Fri week intersects the window.
+function windowLastMonday() {
+  let d = new Date(WINDOW_END.getFullYear(), WINDOW_END.getMonth(), WINDOW_END.getDate());
+  while (d.getDay() === 0 || d.getDay() === 6) {
+    d.setDate(d.getDate() - 1);
+  }
+  return startOfWeekMonday(d);
+}
+
+// Clamp an arbitrary Monday to the allowed [first, last] range so we always
+// open the calendar inside the window even if "today" is outside it.
+function clampMondayToWindow(monday) {
+  const first = windowFirstMonday();
+  const last = windowLastMonday();
+  if (monday.getTime() < first.getTime()) return first;
+  if (monday.getTime() > last.getTime()) return last;
+  return monday;
+}
+
+// Días sin clase dentro de la ventana: semana de receso estudiantil (5–9 oct)
+// y festivo 12 oct (Res. 2433/2025 + calendario de festivos 2026).
+// IMPORTANT: la misma lista vive en apps-script.gs (BLOCKED_DATES) — mantener en sincronía.
+const BLOCKED_DATES = new Set([
+  "2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-09", // receso estudiantil
+  "2026-10-12" // festivo · Día de la Raza
+]);
+function dateISO_(date){ return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`; }
+function isBlockedDate(date){ return BLOCKED_DATES.has(dateISO_(date)); }
+
+// Is the given date within [WINDOW_START, WINDOW_END] (both inclusive) and not blocked?
+function isInWindow(date) {
+  if (isBlockedDate(date)) return false;
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  return d >= WINDOW_START.getTime() && d <= WINDOW_END.getTime();
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function slotKey(date, hour, minute) {
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(hour)}:${pad(minute)}`;
+}
+
+function formatDateLong(d) {
+  return `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
+}
+
+function formatTime(hour, minute) {
+  const h12 = ((hour + 11) % 12) + 1;
+  const ampm = hour < 12 ? 'a.m.' : 'p.m.';
+  return `${h12}:${pad(minute)} ${ampm}`;
+}
+
+function endTime(hour, minute) {
+  const total = hour * 60 + minute + SLOT_DURATION_HOURS * 60;
+  return formatTime(Math.floor(total / 60), total % 60);
+}
+
+// "7:00–9:00 a.m." when both ends share a period, otherwise "11:30 a.m.–1:30 p.m.".
+// Used for chip labels so schools see the full 2-hour block.
+function formatTimeRange(hour, minute) {
+  const s = formatTime(hour, minute);
+  const e = endTime(hour, minute);
+  const mS = s.match(/^(.*?)\s+(a\.m\.|p\.m\.)$/);
+  const mE = e.match(/^(.*?)\s+(a\.m\.|p\.m\.)$/);
+  if (mS && mE && mS[2] === mE[2]) {
+    return `${mS[1]}–${mE[1]} ${mE[2]}`;
+  }
+  return `${s}–${e}`;
+}
+
+function getTimeSlots() {
+  const slots = [];
+  for (let h = FIRST_START_HOUR; h <= LAST_START_HOUR; h++) {
+    slots.push({ hour: h, minute: 0 });
+    if (h < LAST_START_HOUR) slots.push({ hour: h, minute: 30 });
+  }
+  return slots;
+}
+
+// ----- Conflict-aware capacity (with post-session buffer) -----
+// A booking at slot S "uses" a team for TEAM_BLOCK_MIN minutes total: the 2-hour
+// session plus BUFFER_MIN_AFTER for transit/setup before the team can take
+// another booking. With a 1h buffer (default), an 8:00 booking blocks the team
+// from 8:00 to 11:00 — so other slots in that window have one fewer cupo.
+function activeAt_(date, hour, minute) {
+  // Number of bookings whose [start, start + TEAM_BLOCK_MIN) interval covers (date, h:m).
+  let total = 0;
+  for (let minutesAgo = 0; minutesAgo < TEAM_BLOCK_MIN; minutesAgo += 30) {
+    const t = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute);
+    t.setMinutes(t.getMinutes() - minutesAgo);
+    const k = slotKey(t, t.getHours(), t.getMinutes());
+    total += bookings[k] || 0;
+  }
+  return total;
+}
+
+function cuposLeftToStart(date, hour, minute) {
+  // Cupos to start at T = CAPACITY minus the worst (max) team occupancy at any
+  // half-hour during [T, T + TEAM_BLOCK_MIN).
+  let maxActive = 0;
+  for (let offset = 0; offset < TEAM_BLOCK_MIN; offset += 30) {
+    const t = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute);
+    t.setMinutes(t.getMinutes() + offset);
+    maxActive = Math.max(maxActive, activeAt_(t, t.getHours(), t.getMinutes()));
+  }
+  return Math.max(0, CAPACITY - maxActive);
+}
+
+// ----- Network -----
+function isConfigured() {
+  return APPS_SCRIPT_URL && APPS_SCRIPT_URL !== "PASTE_DEPLOYMENT_URL_HERE";
+}
+
+async function fetchBookings() {
+  if (!isConfigured()) return { ok: true, bookings: {} };
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'GET',
+    mode: 'cors',
+    redirect: 'follow'
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+async function postBooking(payload) {
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'cors',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+// ----- Render helpers -----
+// Build the inner HTML of a slot button: a stacked list of "Colegio · Aula"
+// chips for any existing reservations, followed by remaining-cupos text.
+function renderSlotContent_(btn, slotBookings, cuposText) {
+  btn.innerHTML = '';
+  if (slotBookings && slotBookings.length) {
+    btn.classList.add('has-bookings');
+    const list = document.createElement('div');
+    list.className = 'booking-list';
+    slotBookings.forEach(b => {
+      const chip = document.createElement('div');
+      chip.className = 'booking-chip';
+      const name = (typeof shortColegio === 'function') ? shortColegio(b.colegio || '') : (b.colegio || '');
+      const clase = b.clase ? ` · ${b.clase}` : '';
+      chip.textContent = `${name}${clase}`;
+      chip.title = `${b.colegio || ''} · ${b.jornada || ''} · Aula ${b.clase || ''}`;
+      list.appendChild(chip);
+    });
+    btn.appendChild(list);
+  }
+  const c = document.createElement('div');
+  c.className = 'slot-cupos';
+  c.textContent = cuposText;
+  btn.appendChild(c);
+}
+
+function slotBookingsAriaLabel_(hour, minute, date, slotBookings, cuposText) {
+  const base = `${formatTime(hour, minute)} ${formatDateLong(date)}: ${cuposText}`;
+  if (!slotBookings || !slotBookings.length) return base;
+  const names = slotBookings.map(b => `${b.colegio} aula ${b.clase}`).join(', ');
+  return `${base}. Ya reservaron: ${names}.`;
+}
+
+// Build the "Saltar a semana…" dropdown with one option per week in the window.
+// Value is the Monday's ISO date (YYYY-MM-DD); text is "Semana del 13 al 17 de julio".
+function populateWeekJump() {
+  const sel = document.getElementById('weekJump');
+  if (!sel) return;
+  sel.innerHTML = '';
+  let m = windowFirstMonday();
+  const end = windowLastMonday();
+  while (m.getTime() <= end.getTime()) {
+    const fri = addDays(m, 4);
+    const sameMonth = m.getMonth() === fri.getMonth();
+    const label = sameMonth
+      ? `Semana del ${m.getDate()} al ${fri.getDate()} de ${MONTH_NAMES[fri.getMonth()]}`
+      : `Semana del ${m.getDate()} de ${MONTH_NAMES[m.getMonth()]} al ${fri.getDate()} de ${MONTH_NAMES[fri.getMonth()]}`;
+    const opt = document.createElement('option');
+    opt.value = `${m.getFullYear()}-${pad(m.getMonth()+1)}-${pad(m.getDate())}`;
+    opt.textContent = label;
+    sel.appendChild(opt);
+    m = addDays(m, 7);
+  }
+}
+
+// Keep the dropdown's selected value pointing at the currently displayed week.
+function syncWeekJump() {
+  const sel = document.getElementById('weekJump');
+  if (!sel || !currentWeekStart) return;
+  const v = `${currentWeekStart.getFullYear()}-${pad(currentWeekStart.getMonth()+1)}-${pad(currentWeekStart.getDate())}`;
+  if (sel.value !== v) sel.value = v;
+}
+
+// ----- Render -----
+function renderCalendar() {
+  const body = document.getElementById('calendarBody');
+  const weekLabel = document.getElementById('weekLabel');
+  const prevBtn = document.getElementById('prevWeek');
+  const nextBtn = document.getElementById('nextWeek');
+
+  const firstMonday = windowFirstMonday();
+  const lastMonday = windowLastMonday();
+  prevBtn.disabled = currentWeekStart.getTime() <= firstMonday.getTime();
+  nextBtn.disabled = currentWeekStart.getTime() >= lastMonday.getTime();
+
+  const friday = addDays(currentWeekStart, 4);
+  const sameMonth = currentWeekStart.getMonth() === friday.getMonth();
+  weekLabel.textContent = sameMonth
+    ? `Semana del ${currentWeekStart.getDate()} al ${friday.getDate()} de ${MONTH_NAMES[friday.getMonth()]}`
+    : `Semana del ${currentWeekStart.getDate()} de ${MONTH_NAMES[currentWeekStart.getMonth()]} al ${friday.getDate()} de ${MONTH_NAMES[friday.getMonth()]}`;
+
+  syncWeekJump();
+
+  const now = nowInBogota();
+  const days = [0, 1, 2, 3, 4].map(i => addDays(currentWeekStart, i));
+  const slots = getTimeSlots();
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+
+  // Header row
+  const corner = document.createElement('div');
+  corner.className = 'grid-cell corner-cell';
+  grid.appendChild(corner);
+  days.forEach(d => {
+    const isToday = d.toDateString() === now.toDateString();
+    const cell = document.createElement('div');
+    cell.className = 'grid-cell day-header' + (isToday ? ' today' : '');
+    cell.innerHTML = `
+      <div class="day-name">${DAY_NAMES[d.getDay()]}</div>
+      <div class="day-num">${d.getDate()} ${MONTH_ABBR[d.getMonth()]}</div>
+    `;
+    grid.appendChild(cell);
+  });
+
+  // Time-slot rows
+  slots.forEach(s => {
+    const timeCell = document.createElement('div');
+    timeCell.className = 'grid-cell time-label';
+    timeCell.textContent = formatTime(s.hour, s.minute);
+    grid.appendChild(timeCell);
+
+    days.forEach(d => {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+
+      const slotDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), s.hour, s.minute);
+      const isPast = slotDate.getTime() <= now.getTime();
+      const outsideWindow = !isInWindow(d);
+      const key = slotKey(d, s.hour, s.minute);
+      const left = cuposLeftToStart(d, s.hour, s.minute);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot';
+
+      // Schools that have already booked this exact start time
+      const slotBookings = bookingDetails[key] || [];
+
+      if (outsideWindow) {
+        btn.classList.add('past');
+        btn.disabled = true;
+        btn.setAttribute('aria-label', 'Fecha fuera de la ventana de reservas');
+      } else if (isPast) {
+        btn.classList.add('past');
+        btn.disabled = true;
+        btn.setAttribute('aria-label', 'Horario pasado');
+      } else if (left === 0) {
+        btn.classList.add('full');
+        btn.disabled = true;
+        renderSlotContent_(btn, slotBookings, 'Sin cupo');
+        btn.setAttribute('aria-label', slotBookingsAriaLabel_(s.hour, s.minute, d, slotBookings, 'Sin cupo'));
+      } else {
+        if (left <= 1) btn.classList.add('low');
+        else if (left <= 3) btn.classList.add('partial');
+        // else: default (available, green)
+        const cuposText = `${left} ${left === 1 ? 'cupo' : 'cupos'}`;
+        renderSlotContent_(btn, slotBookings, cuposText);
+        btn.setAttribute('aria-label', slotBookingsAriaLabel_(s.hour, s.minute, d, slotBookings, cuposText));
+        btn.addEventListener('click', () => selectSlot(d, s.hour, s.minute, key));
+      }
+      cell.appendChild(btn);
+      grid.appendChild(cell);
+    });
+  });
+
+  body.innerHTML = '';
+  body.appendChild(grid);
+}
+
+// =====================================================================
+// STATE MACHINE — drives which step cards are visible.
+// =====================================================================
+// step1 = always visible (aula selector)
+// step2 = visible once an aula is selected. Has four sub-views:
+//   - already-booked    (aula already has a reservation)
+//   - day-chips         (aula has an assignment → show chips for that day)
+//   - week-fallback     (toggled from day-chips → mini-calendar for the week)
+//   - full-calendar     (aula has no assignment → original week-nav calendar)
+// step3 = visible once a slot is selected (contact + phone form).
+let currentStep2View = null;
+
+function showStep(state) {
+  const s1 = document.getElementById('step1Card');
+  const s2 = document.getElementById('step2Card');
+  const s3 = document.getElementById('step3Card');
+  if (state === 'identify') {
+    s2.hidden = true; s3.hidden = true;
+    selectedSlot = null;
+  } else if (state === 'pick-slot') {
+    s2.hidden = false; s3.hidden = true;
+  } else if (state === 'confirm') {
+    s2.hidden = false; s3.hidden = false;
+    // Scroll the confirm card into view (helpful on mobile)
+    setTimeout(() => s3.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+}
+
+function showStep2View(view) {
+  currentStep2View = view;
+  document.getElementById('alreadyBookedBox').hidden       = view !== 'already-booked';
+  document.getElementById('assignedBanner').hidden         = view !== 'day-chips';
+  document.getElementById('dayChipsContainer').hidden      = view !== 'day-chips';
+  document.getElementById('weekFallbackContainer').hidden  = view !== 'week-fallback';
+  document.getElementById('fullCalendarContainer').hidden  = view !== 'full-calendar';
+  // step2 title
+  const title = document.getElementById('step2Title');
+  if      (view === 'already-booked') title.textContent = 'Estado de tu reserva';
+  else if (view === 'day-chips')      title.textContent = 'Elige la hora';
+  else if (view === 'week-fallback')  title.textContent = 'Si el aula no puede en la fecha propuesta, elige otra fecha';
+  else                                title.textContent = 'Elige día y hora';
+}
+
+// Reschedule flow state. When true, picking a slot updates the existing
+// reservation instead of creating a new one.
+let rescheduleMode = false;
+
+// Decides which sub-view to show in step 2 based on the selected aula.
+// Called whenever the user picks (or changes) an aula in step 1.
+function setupStep2ForSelectedAula() {
+  const sel = getSelectedColegio();
+  // Changing aula invalidates any previously selected slot / reschedule state.
+  selectedSlot = null;
+  rescheduleMode = false;
+  if (!sel) { showStep('identify'); return; }
+
+  showStep('pick-slot');
+
+  // 1) Aula already reserved? Show status + offer reschedule.
+  const existing = findExistingReservationForAula(sel);
+  if (existing) {
+    showStep2View('already-booked');
+    document.getElementById('alreadyBookedTime').textContent = humanizeSlotKey(existing);
+    return;
+  }
+
+  // Otherwise show the slot picker.
+  showSlotPickerForAula(sel);
+}
+
+// Shows the slot-picking sub-view (assigned-date chips, or full calendar
+// fallback) for the given aula. Used both for fresh bookings and reschedules.
+function showSlotPickerForAula(sel) {
+  const assignedDate = getAssignedDateFor(sel);
+  if (assignedDate) {
+    showStep2View('day-chips');
+    document.getElementById('assignedBannerDate').textContent = formatDateLongShort(assignedDate);
+    renderDayChips(assignedDate);
+    const availOnAssigned = countAvailableSlotsOnDay_(assignedDate);
+    const fullWarn = document.getElementById('assignedFullWarning');
+    const showWeekBtn = document.getElementById('showWeekBtn');
+    if (availOnAssigned === 0) {
+      fullWarn.hidden = false;
+      showWeekBtn.textContent = '⌄ Ver otras fechas disponibles';
+    } else {
+      fullWarn.hidden = true;
+      showWeekBtn.textContent = '⌄ El aula no está disponible ese día — reservar otro día de la semana';
+    }
+    return;
+  }
+  // No assignment → full calendar with week-nav.
+  showStep2View('full-calendar');
+  if (!currentWeekStart) currentWeekStart = clampMondayToWindow(startOfWeekMonday(nowInBogota()));
+  renderCalendar();
+}
+
+// Enters reschedule mode: keep the aula selected, open the slot picker.
+function startReschedule() {
+  const sel = getSelectedColegio();
+  if (!sel) return;
+  rescheduleMode = true;
+  selectedSlot = null;
+  showStep('pick-slot');
+  showSlotPickerForAula(sel);
+  document.getElementById('step2Card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Called when the user picks a slot (from chips, mini-week, or full calendar).
+// Stages the selection and reveals step 3.
+function selectSlot(date, hour, minute, key) {
+  selectedSlot = {
+    iso: key, date, hour, minute,
+    label: `${formatDateLong(date)} · ${formatTime(hour, minute)} – ${endTime(hour, minute)}`
+  };
+  document.getElementById('confirmTimeText').textContent =
+    `${formatTime(hour, minute)} – ${endTime(hour, minute)}`;
+  document.getElementById('confirmDayText').textContent = formatDateLong(date);
+  // Aula info (read at click-time so it's always fresh)
+  const sel = getSelectedColegio();
+  if (sel) {
+    document.getElementById('confirmAulaColegio').textContent = sel.colegio || '';
+    const metaParts = [];
+    if (sel.sede)    metaParts.push(`Sede ${sel.sede}`);
+    if (sel.jornada) metaParts.push(`Jornada ${titleCase(sel.jornada)}`);
+    if (sel.clase)   metaParts.push(`Aula ${sel.clase}`);
+    document.getElementById('confirmAulaMeta').textContent = metaParts.join(' · ');
+  }
+  document.getElementById('formError').classList.remove('show');
+
+  // Adjust step 3 for reschedule vs new booking.
+  const isResched = rescheduleMode;
+  document.getElementById('step3Title').textContent = isResched ? 'Confirma la reprogramación' : 'Confirma tu reserva';
+  document.getElementById('confirmSummaryLabel').textContent = isResched
+    ? 'Vas a mover la cita a este bloque de 2 horas' : 'Vas a reservar el bloque de 2 horas';
+  document.getElementById('contactFields').hidden = isResched; // no re-capture on reschedule
+  document.getElementById('confirmBtn').textContent = isResched ? 'Confirmar reprogramación' : 'Confirmar reserva';
+
+  showStep('confirm');
+  // Mark the chosen chip if it lives in a chip grid
+  document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
+  const chipId = 'chip-' + key.replace(/[: -]/g, '');
+  const chip = document.getElementById(chipId);
+  if (chip) chip.classList.add('selected');
+}
+
+// =====================================================================
+// Chip render for the assigned-day view (delegates to shared helper).
+// =====================================================================
+function renderDayChips(date) {
+  renderHourChipsInto_(date, 'morningChips', 'afternoonChips');
+}
+
+// =====================================================================
+// Week-fallback flow: two sub-steps.
+//   A) renderWeekDayPicker(monday) — chips para Lun–Vie (excepto festivos)
+//   B) renderWeekHoursPicker(date) — chips de horas (igual estilo que día asignado)
+// =====================================================================
+
+// Returns count of half-hour slots with cupos > 0 (and not past) for a given day.
+function countAvailableSlotsOnDay_(date) {
+  const now = nowInBogota();
+  if (!isInWindow(date)) return 0;
+  let n = 0;
+  for (const s of getTimeSlots()) {
+    const sd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), s.hour, s.minute);
+    if (sd.getTime() <= now.getTime()) continue;
+    if (cuposLeftToStart(date, s.hour, s.minute) > 0) n++;
+  }
+  return n;
+}
+
+// Which sub-view of the week-fallback is visible.
+let hoursPickerSource = 'week'; // 'week' | 'all' — where the hours picker was opened from
+
+function showWeekSub(sub) {
+  document.getElementById('weekDaysPicker').hidden  = sub !== 'week';
+  document.getElementById('allDatesPicker').hidden  = sub !== 'all';
+  document.getElementById('weekHoursPicker').hidden = sub !== 'hours';
+}
+
+// Builds one day-chip. `source` ('week' | 'all') is remembered so the hours
+// picker's "← Cambiar día" returns to the right place.
+function buildDayChip_(d, source) {
+  const isInWin = isInWindow(d);
+  const availCount = countAvailableSlotsOnDay_(d);
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip day-chip';
+  chip.innerHTML =
+    `<span class="day-chip-name">${DAY_NAMES[d.getDay()]}</span>` +
+    `<span class="day-chip-date">${d.getDate()} ${MONTH_ABBR[d.getMonth()]}</span>` +
+    `<span class="day-chip-meta"></span>`;
+  const meta = chip.querySelector('.day-chip-meta');
+  if (!isInWin) {
+    chip.classList.add('past'); chip.disabled = true;
+    meta.textContent = 'No disponible';
+  } else if (availCount === 0) {
+    chip.classList.add('full'); chip.disabled = true;
+    meta.textContent = 'Sin cupo';
+  } else {
+    if (availCount <= 4) chip.classList.add('low');
+    else if (availCount <= 12) chip.classList.add('partial');
+    meta.textContent = `${availCount} ${availCount === 1 ? 'horario' : 'horarios'}`;
+    chip.addEventListener('click', () => renderWeekHoursPicker(d, source));
+  }
+  return chip;
+}
+
+function renderWeekDayPicker(monday) {
+  document.getElementById('weekFallbackLabel').textContent = formatWeekRange(monday);
+  const wrap = document.getElementById('weekDaysChips');
+  wrap.innerHTML = '';
+  const days = [0,1,2,3,4].map(i => addDays(monday, i));
+  for (const d of days) wrap.appendChild(buildDayChip_(d, 'week'));
+}
+
+// Renders every week in the window, each as a labeled block of 5 day-chips.
+function renderAllDatesPicker() {
+  const container = document.getElementById('allDatesByWeek');
+  container.innerHTML = '';
+  let m = windowFirstMonday();
+  const end = windowLastMonday();
+  while (m.getTime() <= end.getTime()) {
+    const block = document.createElement('div');
+    block.className = 'week-block';
+    const h = document.createElement('h4');
+    h.className = 'chip-section-label';
+    h.textContent = 'Semana ' + formatWeekRange(m);
+    block.appendChild(h);
+    const grid = document.createElement('div');
+    grid.className = 'chip-grid day-chip-grid';
+    [0,1,2,3,4].map(i => addDays(m, i)).forEach(d => grid.appendChild(buildDayChip_(d, 'all')));
+    block.appendChild(grid);
+    container.appendChild(block);
+    m = addDays(m, 7);
+  }
+}
+
+function renderWeekHoursPicker(date, source) {
+  hoursPickerSource = source || 'week';
+  showWeekSub('hours');
+  document.getElementById('pickedDayLabel').textContent = formatDateLongShort(date);
+  // Render chips into the week-fallback morning/afternoon containers
+  // (reuses the same chip building code as the assigned-date view).
+  renderHourChipsInto_(date, 'weekMorningChips', 'weekAfternoonChips');
+}
+
+// Shared chip-rendering routine, can target any pair of mañana/tarde containers.
+function renderHourChipsInto_(date, morningId, afternoonId) {
+  const slots = getTimeSlots();
+  const now = nowInBogota();
+  const morningEl = document.getElementById(morningId);
+  const afternoonEl = document.getElementById(afternoonId);
+  morningEl.innerHTML = ''; afternoonEl.innerHTML = '';
+  for (const s of slots) {
+    const slotDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), s.hour, s.minute);
+    const isPast = slotDate.getTime() <= now.getTime();
+    const key = slotKey(date, s.hour, s.minute);
+    const left = cuposLeftToStart(date, s.hour, s.minute);
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip';
+    chip.id = 'chip-' + key.replace(/[: -]/g, '');
+    chip.innerHTML =
+      `<span class="chip-time">${formatTimeRange(s.hour, s.minute)}</span>` +
+      `<span class="chip-cupos"></span>`;
+    if (isPast) {
+      chip.classList.add('past'); chip.disabled = true;
+      chip.querySelector('.chip-cupos').textContent = '—';
+    } else if (left === 0) {
+      chip.classList.add('full'); chip.disabled = true;
+      chip.querySelector('.chip-cupos').textContent = 'Sin cupo';
+    } else {
+      if (left <= 1) chip.classList.add('low');
+      else if (left <= 3) chip.classList.add('partial');
+      chip.querySelector('.chip-cupos').textContent = `${left} ${left === 1 ? 'cupo' : 'cupos'}`;
+      chip.addEventListener('click', () => selectSlot(date, s.hour, s.minute, key));
+    }
+    (s.hour < 12 ? morningEl : afternoonEl).appendChild(chip);
+  }
+}
+
+// Helper to format week range (used by mini-week header + the dropdown removal).
+function formatWeekRange(monday) {
+  const fri = addDays(monday, 4);
+  const sameMonth = monday.getMonth() === fri.getMonth();
+  return sameMonth
+    ? `del ${monday.getDate()} al ${fri.getDate()} de ${MONTH_NAMES[fri.getMonth()]}`
+    : `del ${monday.getDate()} de ${MONTH_NAMES[monday.getMonth()]} al ${fri.getDate()} de ${MONTH_NAMES[fri.getMonth()]}`;
+}
+
+// ---- Localidad / Colegio cascading dropdowns ----
+// Display helpers: keep raw values in caps (matches CSV) but show
+// title-cased localidad names so the dropdown reads nicely.
+function titleCase(s) {
+  if (!s) return s;
+  return s.toLowerCase().replace(/(^|\s|-|\/)([a-záéíóúüñ])/g,
+    (_, sep, ch) => sep + ch.toUpperCase());
+}
+
+// Short label for use in the calendar slot. Strips "COLEGIO " prefix and
+// " (IED)" suffix so the chip stays compact.
+function shortColegio(name) {
+  return name
+    .replace(/^COLEGIO\s+/i, '')
+    .replace(/\s*\(IED\)\s*$/i, '')
+    .trim();
+}
+
+// Build the option label shown in the colegio dropdown.
+function colegioOptionLabel(entry) {
+  return `${shortColegio(entry.colegio)} · ${entry.jornada} · ${entry.clase}`;
+}
+
+function populateLocalidades() {
+  const sel = document.getElementById('localidadSelect');
+  Object.keys(SCHOOLS_BY_LOCALIDAD).sort().forEach(loc => {
+    const opt = document.createElement('option');
+    opt.value = loc;
+    opt.textContent = titleCase(loc);
+    sel.appendChild(opt);
+  });
+}
+
+function onLocalidadChange() {
+  const locSel = document.getElementById('localidadSelect');
+  const schSel = document.getElementById('schoolSelect');
+  const list = SCHOOLS_BY_LOCALIDAD[locSel.value] || [];
+  schSel.innerHTML = '';
+  if (!list.length) {
+    schSel.innerHTML = '<option value="">Primero selecciona la localidad</option>';
+    schSel.disabled = true;
+    return;
+  }
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Selecciona el colegio…';
+  schSel.appendChild(placeholder);
+  list.forEach((entry, idx) => {
+    const opt = document.createElement('option');
+    // Encode the index so we can recover the full record on submit.
+    opt.value = String(idx);
+    opt.textContent = colegioOptionLabel(entry);
+    schSel.appendChild(opt);
+  });
+  schSel.disabled = false;
+}
+
+function getSelectedColegio() {
+  const loc = document.getElementById('localidadSelect').value;
+  const idxStr = document.getElementById('schoolSelect').value;
+  if (!loc || idxStr === '') return null;
+  const list = SCHOOLS_BY_LOCALIDAD[loc] || [];
+  const idx = parseInt(idxStr, 10);
+  if (isNaN(idx) || idx < 0 || idx >= list.length) return null;
+  return { localidad: loc, ...list[idx] };
+}
+
+// ---- School search (autocomplete across all localidades) ----
+function stripAccents_(s) {
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+function normSearch_(s) {
+  return stripAccents_(String(s || '')).toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+let _schoolIndex = null;
+function buildSchoolIndex() {
+  if (_schoolIndex) return _schoolIndex;
+  const arr = [];
+  for (const loc of Object.keys(SCHOOLS_BY_LOCALIDAD)) {
+    (SCHOOLS_BY_LOCALIDAD[loc] || []).forEach((entry, idx) => {
+      const name = shortColegio(entry.colegio || '');
+      arr.push({
+        loc, idx,
+        colegio: entry.colegio || '',
+        name,
+        jornada: entry.jornada || '',
+        clase: entry.clase || '',
+        // searchable blob: name + full colegio + localidad + jornada + clase
+        norm: normSearch_(`${name} ${entry.colegio} ${loc} ${entry.jornada} ${entry.clase}`)
+      });
+    });
+  }
+  _schoolIndex = arr;
+  return arr;
+}
+
+// Highlights the matched substring(s) in a display string.
+function highlightMatch_(text, q) {
+  const nText = normSearch_(text);
+  const nq = normSearch_(q);
+  const i = nText.indexOf(nq);
+  if (i < 0 || !nq) return escapeHtml_(text);
+  // Map normalized index back to original (accents don't change length here for es)
+  return escapeHtml_(text.slice(0, i)) + '<mark>' +
+         escapeHtml_(text.slice(i, i + nq.length)) + '</mark>' +
+         escapeHtml_(text.slice(i + nq.length));
+}
+
+let _searchActiveIdx = -1;
+let _searchMatches = [];
+
+function runSchoolSearch(q) {
+  const resultsEl = document.getElementById('schoolSearchResults');
+  const clearBtn = document.getElementById('schoolSearchClear');
+  clearBtn.hidden = !q;
+  const nq = normSearch_(q);
+  if (nq.length < 2) { resultsEl.hidden = true; resultsEl.innerHTML = ''; _searchMatches = []; return; }
+
+  const idx = buildSchoolIndex();
+  const matches = idx.filter(e => e.norm.includes(nq)).slice(0, 12);
+  _searchMatches = matches;
+  _searchActiveIdx = -1;
+
+  if (!matches.length) {
+    resultsEl.innerHTML = '<div class="search-empty">Sin resultados. Prueba con otra parte del nombre.</div>';
+    resultsEl.hidden = false;
+    return;
+  }
+  resultsEl.innerHTML = matches.map((e, i) =>
+    `<div class="search-item" data-i="${i}" role="option">` +
+    `<div class="search-item-name">${highlightMatch_(e.name, q)}</div>` +
+    `<div class="search-item-meta">${escapeHtml_(titleCase(e.loc))} · ${escapeHtml_(titleCase(e.jornada))} · Aula ${escapeHtml_(e.clase)}</div>` +
+    `</div>`).join('');
+  resultsEl.hidden = false;
+  resultsEl.querySelectorAll('.search-item').forEach(el => {
+    el.addEventListener('click', () => pickSearchResult(+el.getAttribute('data-i')));
+  });
+}
+
+function pickSearchResult(i) {
+  const e = _searchMatches[i];
+  if (!e) return;
+  // Set the dropdowns to this aula and proceed.
+  document.getElementById('localidadSelect').value = e.loc;
+  onLocalidadChange();
+  document.getElementById('schoolSelect').value = String(e.idx);
+  // Reflect in the search box + close results
+  document.getElementById('schoolSearch').value = `${e.name} · ${titleCase(e.jornada)} · ${e.clase}`;
+  document.getElementById('schoolSearchResults').hidden = true;
+  document.getElementById('schoolSearchClear').hidden = false;
+  setupStep2ForSelectedAula();
+  // Scroll step 2 into view on mobile
+  const s2 = document.getElementById('step2Card');
+  if (s2 && !s2.hidden) setTimeout(() => s2.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+}
+
+function clearSchoolSearch() {
+  document.getElementById('schoolSearch').value = '';
+  document.getElementById('schoolSearchResults').hidden = true;
+  document.getElementById('schoolSearchClear').hidden = true;
+  _searchMatches = [];
+}
+
+// Scans the public bookingDetails map for an existing reservation for this
+// exact aula. Aula identity = sede DANE (14-digit) + jornada + clase — robust
+// against spelling drift in the colegio/sede free-text fields.
+function findExistingReservationForAula(sel) {
+  if (!sel || !sel.dane) return null;
+  const daneStr  = String(sel.dane).trim();
+  const jorStr   = String(sel.jornada || '').trim();
+  const claseStr = String(sel.clase || '').trim();
+  for (const slotK of Object.keys(bookingDetails)) {
+    const list = bookingDetails[slotK] || [];
+    for (const r of list) {
+      if (r.dane === daneStr &&
+          r.jornada === jorStr &&
+          r.clase === claseStr) {
+        return slotK;
+      }
+    }
+  }
+  return null;
+}
+
+// "2026-08-12 08:00" → "miércoles 12 de agosto a las 8:00 a.m."
+function humanizeSlotKey(slotK) {
+  const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(slotK);
+  if (!m) return slotK;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  const h = +m[4], mi = +m[5];
+  return `${formatDateLong(d)} a las ${formatTime(h, mi)}`;
+}
+
+// (refreshAulaWarning was removed — the "already booked" state is now driven
+// by setupStep2ForSelectedAula() showing the alreadyBookedBox in step 2.)
+
+// ----- Aula → fecha asignada -----
+
+// Build the lookup key used by the assignments map.
+// Uses the sede DANE (14-digit) as the primary anchor — robust against
+// spelling/spacing drift in the colegio/sede free-text columns.
+function aulaKeyFor(sel) {
+  if (!sel || !sel.dane) return '';
+  return [String(sel.dane).trim(),
+          String(sel.jornada || '').trim(),
+          String(sel.clase || '').trim()].join('|');
+}
+
+// Returns the SPECIFIC DAY (Date object) assigned to this aula, or null if
+// no assignment exists (or the assignment is invalid).
+function getAssignedDateFor(sel) {
+  const key = aulaKeyFor(sel);
+  const v = assignments[key];
+  if (!v) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return null;
+  return new Date(+m[1], +m[2] - 1, +m[3]);
+}
+
+// Date → "martes 12 de agosto"
+function formatDateLongShort(d) {
+  return `${DAY_NAMES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES[d.getMonth()]}`;
+}
+
+// (refreshAssignmentInfo was removed — the assigned-date banner is now part
+// of step 2 itself, set up by setupStep2ForSelectedAula().)
+
+function showFormError(msg) {
+  const el = document.getElementById('formError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 5500);
+}
+
+// ----- Confirmation modal -----
+function showConfirmModal(date, hour, minute, sel, isReschedule) {
+  document.getElementById('confirmModalTitle').textContent =
+    isReschedule ? '¡Tu cita fue reprogramada!' : '¡Tu cita está confirmada!';
+  document.getElementById('confirmModalDay').textContent  = formatDateLong(date);
+  document.getElementById('confirmModalTime').textContent = `${formatTime(hour, minute)} – ${endTime(hour, minute)}`;
+  const aulaParts = [sel && sel.colegio];
+  const meta = [];
+  if (sel && sel.sede)    meta.push(`Sede ${sel.sede}`);
+  if (sel && sel.jornada) meta.push(`Jornada ${titleCase(sel.jornada)}`);
+  if (sel && sel.clase)   meta.push(`Aula ${sel.clase}`);
+  if (meta.length) aulaParts.push(meta.join(' · '));
+  document.getElementById('confirmModalAula').innerHTML =
+    aulaParts.filter(Boolean).map(s => `<div>${escapeHtml_(s)}</div>`).join('');
+  document.getElementById('confirmModal').hidden = false;
+  // Focus the close button for keyboard accessibility
+  setTimeout(() => document.getElementById('confirmModalCloseBtn').focus(), 60);
+}
+
+function closeConfirmModalAndReset() {
+  document.getElementById('confirmModal').hidden = true;
+  // Now reset the form / page state
+  document.getElementById('contactInput').value = '';
+  document.getElementById('phoneInput').value = '';
+  document.getElementById('contactFields').hidden = false;
+  document.getElementById('localidadSelect').value = '';
+  document.getElementById('schoolSelect').innerHTML = '<option value="">Primero selecciona la localidad</option>';
+  document.getElementById('schoolSelect').disabled = true;
+  if (typeof clearSchoolSearch === 'function') clearSchoolSearch();
+  selectedSlot = null;
+  rescheduleMode = false;
+  showStep('identify');
+  document.getElementById('step1Card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Reschedule an existing reservation to the newly-picked slot.
+async function submitReschedule(sel) {
+  if (!selectedSlot) return showFormError('No hay un horario seleccionado.');
+  if (!isConfigured()) return showFormError('La URL de Apps Script no está configurada.');
+
+  // Soft check: warn if moving off the assigned date.
+  const assignedDate = getAssignedDateFor(sel);
+  if (assignedDate) {
+    const sameDay = assignedDate.getFullYear() === selectedSlot.date.getFullYear()
+      && assignedDate.getMonth() === selectedSlot.date.getMonth()
+      && assignedDate.getDate() === selectedSlot.date.getDate();
+    if (!sameDay) {
+      const ok = window.confirm(
+        `La fecha asignada a tu aula es ${formatDateLongShort(assignedDate)}, ` +
+        `pero estás reprogramando al ${formatDateLongShort(selectedSlot.date)}.\n\n¿Continuar?`);
+      if (!ok) return;
+    }
+  }
+
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true; btn.textContent = 'Reprogramando…';
+  document.getElementById('formError').classList.remove('show');
+  try {
+    const res = await postBooking({
+      action: 'reschedule',
+      dane: sel.dane, jornada: sel.jornada, clase: sel.clase,
+      newSlot: selectedSlot.iso
+    });
+    if (res && res.ok) {
+      const dateStr = formatDateLong(selectedSlot.date);
+      const timeStr = formatTime(selectedSlot.hour, selectedSlot.minute);
+      rescheduleMode = false;
+      document.getElementById('contactFields').hidden = false; // restore for next use
+      showConfirmModal(selectedSlot.date, selectedSlot.hour, selectedSlot.minute, sel, true);
+      await refresh();
+    } else if (res && res.error === 'slot_full') {
+      showToast('Ese horario acaba de llenarse, elige otro.', 'error');
+      await refresh();
+      selectedSlot = null;
+      showStep('pick-slot');
+      showSlotPickerForAula(sel);
+    } else if (res && res.error === 'not_found') {
+      showFormError('No se encontró la reserva a reprogramar. Refresca la página.');
+    } else {
+      showFormError('No se pudo reprogramar (' + (res && res.error || 'error') + ').');
+    }
+  } catch (err) {
+    showFormError('No se pudo conectar: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = rescheduleMode ? 'Confirmar reprogramación' : 'Confirmar reserva';
+  }
+}
+
+async function submitBooking() {
+  const sel = getSelectedColegio();
+  if (!sel) return showFormError('Selecciona un colegio.');
+
+  // Reschedule mode has its own path (no contact re-capture, uses the
+  // reschedule endpoint to move the existing reservation).
+  if (rescheduleMode) return submitReschedule(sel);
+
+  const contact = document.getElementById('contactInput').value.trim();
+  const phone = document.getElementById('phoneInput').value.trim();
+
+  if (!document.getElementById('localidadSelect').value) return showFormError('Selecciona una localidad.');
+  if (!contact) return showFormError('Ingresa el nombre del contacto.');
+  if (!phone) return showFormError('Ingresa un teléfono.');
+  if (!/^[0-9]{7,15}$/.test(phone)) return showFormError('El teléfono debe tener solo números (7 a 15 dígitos).');
+
+  // Client-side check: bail early if this aula already has a reservation.
+  // The backend re-checks too — this is just to avoid wasted submissions.
+  const existing = findExistingReservationForAula(sel);
+  if (existing) {
+    return showFormError(
+      `Esta aula ya tiene una reserva (${humanizeSlotKey(existing)}). ` +
+      `Solo se permite una reserva por aula. Si necesitas cambiarla, ` +
+      `cancela la anterior contactando al whatsapp del proyecto.`
+    );
+  }
+
+  // Soft check: if the aula has an assigned date and is trying to reserve on a
+  // different day, ask for confirmation. Lets them continue but makes the
+  // mismatch impossible to miss.
+  const assignedDate = getAssignedDateFor(sel);
+  if (assignedDate && selectedSlot) {
+    const sameDay = (
+      assignedDate.getFullYear() === selectedSlot.date.getFullYear() &&
+      assignedDate.getMonth() === selectedSlot.date.getMonth() &&
+      assignedDate.getDate() === selectedSlot.date.getDate()
+    );
+    if (!sameDay) {
+      const ok = window.confirm(
+        `La fecha asignada a tu aula es ${formatDateLongShort(assignedDate)}, ` +
+        `pero estás reservando el ${formatDateLongShort(selectedSlot.date)}.\n\n` +
+        `¿Quieres continuar de todos modos?`
+      );
+      if (!ok) return;
+    }
+  }
+
+  if (!isConfigured()) {
+    return showFormError('La URL de Apps Script no está configurada. Edita APPS_SCRIPT_URL en index.html.');
+  }
+  if (!selectedSlot) {
+    return showFormError('No hay un horario seleccionado.');
+  }
+
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  document.getElementById('formError').classList.remove('show');
+
+  try {
+    const res = await postBooking({
+      slot: selectedSlot.iso,
+      school: sel.colegio,
+      grade: sel.clase,           // "clase" (e.g., 702) is what we track per aula
+      jornada: sel.jornada,
+      localidad: sel.localidad,
+      sede: sel.sede,
+      dane: sel.dane,
+      contact,
+      phone
+    });
+    if (res && res.ok) {
+      // Open the confirmation modal with the booking summary + consent reminder.
+      // Form is reset only when the user clicks "Listo" (see modal close handler in init).
+      showConfirmModal(selectedSlot.date, selectedSlot.hour, selectedSlot.minute, sel);
+      await refresh();
+    } else if (res && res.error === 'slot_full') {
+      // Refresh so chips reflect the new state, then push the user back
+      // to pick a different slot.
+      showToast('Ese horario acaba de llenarse, por favor elige otro.', 'error');
+      await refresh();
+      selectedSlot = null;
+      showStep('pick-slot');
+      if (getSelectedColegio()) setupStep2ForSelectedAula();
+    } else if (res && res.error === 'aula_already_booked') {
+      // Someone (the same user from another tab, or staff) booked first.
+      // Send them back to step 1 and let setupStep2 show the already-booked banner.
+      showToast('Esta aula ya tiene una reserva. Si necesitas cambiarla, contacta al WhatsApp del proyecto.', 'error');
+      await refresh();
+      selectedSlot = null;
+      if (getSelectedColegio()) setupStep2ForSelectedAula();
+    } else if (res && res.error === 'already_booked') {
+      // Back-compat: old backend before per-aula uniqueness.
+      showFormError('Este colegio ya tiene una reserva en este horario.');
+      refresh();
+    } else {
+      const err = (res && res.error) ? res.error : 'desconocido';
+      showFormError(`No pudimos guardar la reserva (${err}). Intenta de nuevo.`);
+    }
+  } catch (err) {
+    showFormError('No se pudo conectar con el servidor: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Confirmar reserva';
+  }
+}
+
+// ----- Reservations table (below calendar) -----
+
+// Flattens bookingDetails into a sorted array, counts per-colegio, and renders
+// the "Reservas actuales" table. Colegios with more than one reservation
+// (across any of their aulas) are flagged with ⚠️ and a tinted row.
+// Reservations table state (so header clicks can re-sort without refetching).
+let reservationsRows = [];
+let reservationsColegioCount = {};
+let reservationsSort = { col: 'reservedEl', dir: -1 }; // default: most recent booking first
+
+function shortDate_(d) {
+  if (!d) return '';
+  return `${DAY_NAMES[d.getDay()].slice(0,3)}. ${d.getDate()} ${MONTH_ABBR[d.getMonth()]}`;
+}
+
+function renderReservationsTable() {
+  const body = document.getElementById('reservationsBody');
+  const summary = document.getElementById('reservationsSummary');
+  if (!body) return;
+
+  // Flatten
+  const rows = [];
+  const colegioCount = {};
+  for (const slotK of Object.keys(bookingDetails)) {
+    const list = bookingDetails[slotK] || [];
+    for (const r of list) {
+      const colegio = r.colegio || '';
+      colegioCount[colegio] = (colegioCount[colegio] || 0) + 1;
+      const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(slotK);
+      const dateObj = m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+      // Booking creation timestamp "YYYY-MM-DD HH:mm"
+      const tm = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(String(r.ts || ''));
+      const tsObj = tm ? new Date(+tm[1], +tm[2]-1, +tm[3], +tm[4], +tm[5]) : null;
+      rows.push({
+        slotK, dateObj,
+        hour: m ? +m[4] : 0, minute: m ? +m[5] : 0,
+        colegio, sede: r.sede || '', jornada: r.jornada || '',
+        clase: r.clase || '', localidad: r.localidad || '', dane: r.dane || '',
+        ts: String(r.ts || ''), tsObj
+      });
+    }
+  }
+
+  const totalRes = rows.length;
+  const dupCount = Object.values(colegioCount).filter(n => n > 1).length;
+
+  if (!totalRes) {
+    body.innerHTML = '<div class="reservations-empty">Aún no hay reservas.</div>';
+    summary.textContent = '0 reservas';
+    return;
+  }
+
+  // Discrepancy classification (assigned vs selected date).
+  function classifyDiscrepancy(row) {
+    if (!row.dane) return { level: 'none', assignedDate: null, deltaDays: null };
+    const key = [String(row.dane).trim(), String(row.jornada || '').trim(), String(row.clase || '').trim()].join('|');
+    const assignedStr = assignments[key];
+    if (!assignedStr || !row.dateObj) return { level: 'none', assignedDate: null, deltaDays: null };
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(assignedStr);
+    if (!m) return { level: 'none', assignedDate: null, deltaDays: null };
+    const assignedDate = new Date(+m[1], +m[2] - 1, +m[3]);
+    const deltaDays = Math.round((row.dateObj.getTime() - assignedDate.getTime()) / 86400000);
+    if (deltaDays === 0) return { level: 'match', assignedDate, deltaDays };
+    const sameWeek = startOfWeekMonday(assignedDate).getTime() === startOfWeekMonday(row.dateObj).getTime();
+    return { level: sameWeek ? 'soft' : 'hard', assignedDate, deltaDays };
+  }
+
+  const counters = { match: 0, soft: 0, hard: 0, none: 0 };
+  for (const r of rows) { r._disc = classifyDiscrepancy(r); counters[r._disc.level]++; }
+
+  const sumParts = [`${totalRes} reserva${totalRes === 1 ? '' : 's'}`];
+  if (counters.match) sumParts.push(`<span style="color:#065f46">✓ ${counters.match} en su fecha</span>`);
+  if (counters.soft)  sumParts.push(`<span style="color:#92400e">⚠ ${counters.soft} otro día (misma semana)</span>`);
+  if (counters.hard)  sumParts.push(`<span style="color:#9a3412">⚠⚠ ${counters.hard} otra semana</span>`);
+  if (counters.none)  sumParts.push(`<span style="color:#6b7280">${counters.none} sin asignar</span>`);
+  if (dupCount) sumParts.push(`${dupCount} colegio${dupCount===1?'':'s'} con +1 reserva`);
+  summary.innerHTML = sumParts.join(' · ');
+
+  reservationsRows = rows;
+  reservationsColegioCount = colegioCount;
+  renderReservationsTableBody();
+}
+
+// Sort comparators per column id.
+const RESV_SORTKEYS = {
+  colegio:     r => (r.colegio || '').toLowerCase(),
+  localidad:   r => (r.localidad || '').toLowerCase(),
+  propuesta:   r => r._disc && r._disc.assignedDate ? r._disc.assignedDate.getTime() : Infinity,
+  seleccionada:r => r.dateObj ? r.dateObj.getTime() : Infinity,
+  delta:       r => (r._disc && r._disc.deltaDays != null) ? r._disc.deltaDays : Infinity,
+  reservedEl:  r => r.tsObj ? r.tsObj.getTime() : -Infinity,
+  hora:        r => r.hour * 60 + r.minute,
+};
+
+function setReservationsSort(col) {
+  if (reservationsSort.col === col) reservationsSort.dir *= -1;
+  else reservationsSort = { col, dir: 1 };
+  renderReservationsTableBody();
+}
+
+function renderReservationsTableBody() {
+  const body = document.getElementById('reservationsBody');
+  if (!body || !reservationsRows.length) return;
+  const colegioCount = reservationsColegioCount;
+
+  const rows = reservationsRows.slice();
+  const keyFn = RESV_SORTKEYS[reservationsSort.col] || RESV_SORTKEYS.colegio;
+  const dir = reservationsSort.dir;
+  rows.sort((a, b) => {
+    const ka = keyFn(a), kb = keyFn(b);
+    if (ka < kb) return -1 * dir;
+    if (ka > kb) return 1 * dir;
+    // tiebreak by colegio then slot
+    const ca = (a.colegio||'').toLowerCase(), cb = (b.colegio||'').toLowerCase();
+    if (ca !== cb) return ca < cb ? -1 : 1;
+    return a.slotK < b.slotK ? -1 : 1;
+  });
+
+  const cols = [
+    { id: null,          label: '',                  cls: 'col-icon' },
+    { id: 'colegio',     label: 'Colegio · Aula',    cls: '' },
+    { id: 'localidad',   label: 'Localidad',         cls: '' },
+    { id: 'propuesta',   label: 'Fecha propuesta',   cls: '' },
+    { id: 'seleccionada',label: 'Fecha seleccionada',cls: '' },
+    { id: 'delta',       label: 'Δ',                 cls: 'col-delta' },
+    { id: 'reservedEl',  label: 'Reservó el',        cls: '' },
+    { id: 'hora',        label: 'Hora',              cls: '' },
+  ];
+  const arrow = id => reservationsSort.col === id ? (reservationsSort.dir === 1 ? ' ▲' : ' ▼') : '';
+
+  let html = '<table class="reservations-table"><thead><tr>' +
+    cols.map(c => c.id
+      ? `<th class="sortable ${c.cls}" data-sort="${c.id}">${c.label}${arrow(c.id)}</th>`
+      : `<th class="${c.cls}"></th>`).join('') +
+    '</tr></thead><tbody>';
+
+  for (const r of rows) {
+    const isDup = colegioCount[r.colegio] > 1;
+    const icons = [];
+    if (r._disc.level === 'hard') icons.push('⚠️⚠️');
+    else if (r._disc.level === 'soft') icons.push('⚠️');
+    if (isDup) icons.push(`<span title="Este colegio tiene ${colegioCount[r.colegio]} reservas">×${colegioCount[r.colegio]}</span>`);
+    const reservedStr = shortDate_(r.dateObj);
+    const assignedStr = r._disc.assignedDate ? shortDate_(r._disc.assignedDate) : '<span class="muted-cell">—</span>';
+    const deltaStr = r._disc.deltaDays == null ? '—'
+      : r._disc.deltaDays === 0 ? '<span class="delta-zero">0</span>'
+      : (r._disc.deltaDays > 0 ? `+${r._disc.deltaDays}d` : `${r._disc.deltaDays}d`);
+    const timeStr = `${formatTime(r.hour, r.minute)} – ${endTime(r.hour, r.minute)}`;
+    const aulaLabel = `${r.jornada || ''}${r.jornada && r.clase ? ' · ' : ''}Aula ${r.clase || ''}`;
+    // "Reservó el" = booking timestamp
+    let tsStr = '<span class="muted-cell">—</span>', tsTitle = '';
+    if (r.tsObj) {
+      tsStr = `${r.tsObj.getDate()} ${MONTH_ABBR[r.tsObj.getMonth()]}`;
+      tsTitle = ` title="${escapeHtml_(r.ts)}"`;
+    }
+    const rowCls = ['disc-' + r._disc.level];
+    if (isDup) rowCls.push('dup');
+    html += `<tr class="${rowCls.join(' ')}">` +
+      `<td class="col-icon">${icons.join(' ')}</td>` +
+      `<td><div class="col-colegio">${escapeHtml_(shortColegio(r.colegio))}</div>` +
+      `<div class="col-aula">${escapeHtml_(aulaLabel)}</div></td>` +
+      `<td>${escapeHtml_(titleCase(r.localidad))}</td>` +
+      `<td class="col-fecha">${assignedStr}</td>` +
+      `<td class="col-fecha col-fecha-sel">${escapeHtml_(reservedStr)}</td>` +
+      `<td class="col-delta">${deltaStr}</td>` +
+      `<td class="col-fecha"${tsTitle}>${tsStr}</td>` +
+      `<td class="col-hora">${escapeHtml_(timeStr)}</td>` +
+      `</tr>`;
+  }
+  html += '</tbody></table>';
+  body.innerHTML = html;
+
+  // Wire header clicks
+  body.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', () => setReservationsSort(th.getAttribute('data-sort')));
+  });
+}
+
+function escapeHtml_(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ----- Refresh -----
+async function refresh() {
+  const body = document.getElementById('calendarBody');
+  body.innerHTML = '<div class="status"><div class="spinner"></div><div style="margin-top:14px">Cargando disponibilidad…</div></div>';
+  try {
+    const data = await fetchBookings();
+    bookings = (data && data.bookings) || {};
+    bookingDetails = (data && data.details) || {};
+    assignments = (data && data.assignments) || {};
+    renderCalendar();
+    renderReservationsTable();
+    renderMonthCalendars();
+  } catch (err) {
+    body.innerHTML = `
+      <div class="status" style="color:var(--error)">
+        Error al cargar disponibilidad: ${err.message}<br><br>
+        <button class="nav-btn" id="retryBtn" type="button">Reintentar</button>
+      </div>`;
+    document.getElementById('retryBtn').addEventListener('click', refresh);
+  }
+}
+
+// ----- Month calendar view (internal monitoring) -----
+// Renders one Mon–Fri month grid per month spanned by the window, with each
+// reservation shown as a chip colored by jornada (mañana/única vs tarde).
+function renderMonthCalendars() {
+  const container = document.getElementById('monthCalendarBody');
+  const summaryEl = document.getElementById('calendarViewSummary');
+  if (!container) return;
+
+  // Compact time for chips: "7:00a" / "1:30p"
+  function compactTime(h, mi) {
+    const h12 = ((h + 11) % 12) + 1;
+    return `${h12}:${pad(mi)}${h < 12 ? 'a' : 'p'}`;
+  }
+
+  // Build date → confirmed reservations map from bookingDetails.
+  const byDate = {};
+  const reservedKeys = new Set();
+  let total = 0;
+  for (const slotK of Object.keys(bookingDetails)) {
+    const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(slotK);
+    if (!m) continue;
+    const dateStr = `${m[1]}-${m[2]}-${m[3]}`;
+    const list = bookingDetails[slotK] || [];
+    for (const r of list) {
+      (byDate[dateStr] = byDate[dateStr] || []).push({
+        colegio: r.colegio || '', jornada: r.jornada || '', clase: r.clase || '',
+        localidad: r.localidad || '', hour: +m[4], minute: +m[5]
+      });
+      if (r.dane) reservedKeys.add([String(r.dane).trim(),
+        String(r.jornada||'').trim(), String(r.clase||'').trim()].join('|'));
+      total++;
+    }
+  }
+
+  // Build date → PENDING map: aulas that have an assigned date but no confirmed
+  // reservation yet. Look up colegio info from SCHOOLS_BY_LOCALIDAD.
+  const pendingByDate = {};
+  let pendingCount = 0;
+  for (const loc of Object.keys(SCHOOLS_BY_LOCALIDAD)) {
+    for (const a of SCHOOLS_BY_LOCALIDAD[loc]) {
+      const key = [String(a.dane||'').trim(), String(a.jornada||'').trim(), String(a.clase||'').trim()].join('|');
+      const assignedStr = assignments[key];
+      if (!assignedStr) continue;                 // no assignment → skip
+      if (reservedKeys.has(key)) continue;        // already reserved → not pending
+      const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(assignedStr);
+      if (!dm) continue;
+      const dateStr = assignedStr;
+      (pendingByDate[dateStr] = pendingByDate[dateStr] || []).push({
+        colegio: a.colegio || '', jornada: a.jornada || '', clase: a.clase || ''
+      });
+      pendingCount++;
+    }
+  }
+
+  summaryEl.textContent =
+    `${total} confirmada${total === 1 ? '' : 's'}` +
+    (pendingCount ? ` · ${pendingCount} pendiente${pendingCount === 1 ? '' : 's'}` : '');
+
+  // Months spanned by the window.
+  const months = [];
+  let cur = new Date(WINDOW_START.getFullYear(), WINDOW_START.getMonth(), 1);
+  const lastMonth = new Date(WINDOW_END.getFullYear(), WINDOW_END.getMonth(), 1);
+  while (cur.getTime() <= lastMonth.getTime()) {
+    months.push(new Date(cur.getFullYear(), cur.getMonth(), 1));
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  const now = nowInBogota();
+  const DOW = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+
+  let html =
+    '<div class="mc-legend">' +
+    '<div class="mc-legend-item"><span class="mc-legend-swatch" style="background:#fde4d0"></span>Mañana / Única</div>' +
+    '<div class="mc-legend-item"><span class="mc-legend-swatch" style="background:#d6e9fb"></span>Tarde</div>' +
+    '<div class="mc-legend-item"><span class="mc-legend-swatch" style="background:#f3f4f6;border-style:dashed;border-color:#d1d5db"></span>Asignado sin reservar</div>' +
+    '</div>';
+
+  for (const monthStart of months) {
+    const y = monthStart.getFullYear(), mo = monthStart.getMonth();
+    const monthLabel = `${MONTH_NAMES[mo]} ${y}`;
+    html += `<div class="month-block"><div class="month-title">${monthLabel}</div><div class="month-grid">`;
+    html += DOW.map(d => `<div class="mc-dow">${d}</div>`).join('');
+
+    // Weeks: from the Monday on/before the 1st, until the Monday passes month end.
+    const monthEnd = new Date(y, mo + 1, 0);
+    let weekMon = startOfWeekMonday(new Date(y, mo, 1));
+    while (weekMon.getTime() <= monthEnd.getTime()) {
+      for (const d of [0,1,2,3,4].map(i => addDays(weekMon, i))) {
+        const inMonth = d.getMonth() === mo && d.getFullYear() === y;
+        if (!inMonth) { html += '<div class="mc-cell mc-cell-empty"></div>'; continue; }
+        const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+        const isToday = d.toDateString() === now.toDateString();
+        const cellCls = ['mc-cell'];
+        if (isToday) cellCls.push('mc-today');
+        if (!isInWindow(d)) cellCls.push('mc-cell-outside');
+        const items = (byDate[dateStr] || []).slice().sort((a,b) =>
+          (a.hour*60+a.minute) - (b.hour*60+b.minute));
+        let chips = '';
+        // Confirmed reservations (colored by jornada, with time)
+        for (const it of items) {
+          const cls = /TARDE/i.test(it.jornada) ? 'j-tarde' : 'j-manana';
+          const name = shortColegio(it.colegio);
+          chips += `<div class="mc-chip ${cls}" title="${escapeHtml_(it.colegio)} · ${escapeHtml_(it.jornada)} · Aula ${escapeHtml_(it.clase)} · ${formatTime(it.hour,it.minute)} – ${endTime(it.hour,it.minute)}">` +
+                   `<span class="mc-chip-time">${compactTime(it.hour,it.minute)}</span>${escapeHtml_(name)} <span class="mc-chip-aula">${escapeHtml_(it.clase)}</span></div>`;
+        }
+        // Pending (assigned but not reserved) — gray dashed chips
+        const pend = (pendingByDate[dateStr] || []).slice().sort((a,b) =>
+          a.colegio.localeCompare(b.colegio));
+        for (const p of pend) {
+          const name = shortColegio(p.colegio);
+          chips += `<div class="mc-chip j-pending" title="SIN RESERVAR · ${escapeHtml_(p.colegio)} · ${escapeHtml_(p.jornada)} · Aula ${escapeHtml_(p.clase)}">` +
+                   `${escapeHtml_(name)} <span class="mc-chip-aula">${escapeHtml_(p.clase)}</span></div>`;
+        }
+        html += `<div class="${cellCls.join(' ')}"><div class="mc-daynum">${d.getDate()}</div>${chips}</div>`;
+      }
+      weekMon = addDays(weekMon, 7);
+    }
+    html += '</div></div>';
+  }
+
+  container.innerHTML = html;
+}
+
+// ----- Init -----
+document.addEventListener('DOMContentLoaded', () => {
+  if (!isConfigured()) {
+    document.getElementById('configWarning').style.display = 'block';
+  }
+  populateLocalidades();
+  populateWeekJump();   // for the full-calendar fallback view
+  currentWeekStart = clampMondayToWindow(startOfWeekMonday(nowInBogota()));
+  showStep('identify'); // start at step 1
+  refresh();
+
+  // --- Aula selectors (Step 1) ---
+  document.getElementById('localidadSelect').addEventListener('change', () => {
+    onLocalidadChange();
+    setupStep2ForSelectedAula();
+  });
+  document.getElementById('schoolSelect').addEventListener('change', setupStep2ForSelectedAula);
+
+  // --- School search ---
+  const searchInput = document.getElementById('schoolSearch');
+  searchInput.addEventListener('input', (e) => runSchoolSearch(e.target.value));
+  searchInput.addEventListener('focus', (e) => { if (e.target.value) runSchoolSearch(e.target.value); });
+  document.getElementById('schoolSearchClear').addEventListener('click', () => {
+    clearSchoolSearch(); searchInput.focus();
+  });
+  // Keyboard nav in results
+  searchInput.addEventListener('keydown', (e) => {
+    const resultsEl = document.getElementById('schoolSearchResults');
+    if (resultsEl.hidden || !_searchMatches.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      _searchActiveIdx += (e.key === 'ArrowDown' ? 1 : -1);
+      if (_searchActiveIdx < 0) _searchActiveIdx = _searchMatches.length - 1;
+      if (_searchActiveIdx >= _searchMatches.length) _searchActiveIdx = 0;
+      resultsEl.querySelectorAll('.search-item').forEach((el, i) => {
+        el.classList.toggle('active', i === _searchActiveIdx);
+        if (i === _searchActiveIdx) el.scrollIntoView({ block: 'nearest' });
+      });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      pickSearchResult(_searchActiveIdx >= 0 ? _searchActiveIdx : 0);
+    } else if (e.key === 'Escape') {
+      resultsEl.hidden = true;
+    }
+  });
+  // Close results when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) {
+      document.getElementById('schoolSearchResults').hidden = true;
+    }
+  });
+
+  // --- Step 2 sub-view toggles ---
+  function openWeekDays() {
+    const sel = getSelectedColegio();
+    const assignedDate = sel ? getAssignedDateFor(sel) : null;
+    // If there's an assigned date use its week; otherwise fall back to the
+    // first window week (e.g., when the assigned date is full we still anchor
+    // the day picker on the assigned week).
+    const monday = assignedDate ? startOfWeekMonday(assignedDate) : windowFirstMonday();
+    renderWeekDayPicker(monday);
+    showWeekSub('week');
+  }
+
+  document.getElementById('showWeekBtn').addEventListener('click', () => {
+    showStep2View('week-fallback');
+    openWeekDays();
+  });
+  document.getElementById('hideWeekBtn').addEventListener('click', () => {
+    showStep2View('day-chips');
+  });
+  // "Tampoco puedo esta semana → ver todas las fechas"
+  document.getElementById('showAllDatesBtn').addEventListener('click', () => {
+    renderAllDatesPicker();
+    showWeekSub('all');
+  });
+  // From all-dates back to the assigned week's day picker
+  document.getElementById('backToWeekDaysBtn').addEventListener('click', openWeekDays);
+  // From hours back to wherever we came from (week days or all dates)
+  document.getElementById('backToDayPickerBtn').addEventListener('click', () => {
+    if (hoursPickerSource === 'all') {
+      renderAllDatesPicker();
+      showWeekSub('all');
+    } else {
+      openWeekDays();
+    }
+  });
+
+  // --- Full-calendar fallback nav (only used when no assignment) ---
+  document.getElementById('weekJump').addEventListener('change', (e) => {
+    const v = e.target.value;
+    if (!v) return;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+    if (!m) return;
+    currentWeekStart = clampMondayToWindow(new Date(+m[1], +m[2] - 1, +m[3]));
+    renderCalendar();
+  });
+  document.getElementById('prevWeek').addEventListener('click', () => {
+    currentWeekStart = addDays(currentWeekStart, -7);
+    renderCalendar();
+  });
+  document.getElementById('nextWeek').addEventListener('click', () => {
+    currentWeekStart = addDays(currentWeekStart, 7);
+    renderCalendar();
+  });
+
+  // --- Step 3 (confirm form) ---
+  document.getElementById('confirmBtn').addEventListener('click', submitBooking);
+  document.getElementById('changeSlotBtn').addEventListener('click', () => {
+    selectedSlot = null;
+    showStep('pick-slot');
+    document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
+    document.getElementById('step2Card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('rescheduleBtn').addEventListener('click', startReschedule);
+  document.getElementById('phoneInput').addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  });
+
+  // --- Confirmation modal ---
+  document.getElementById('confirmModalCloseBtn').addEventListener('click', closeConfirmModalAndReset);
+  document.getElementById('confirmModal').addEventListener('click', (e) => {
+    // Close when clicking backdrop (outside the modal box)
+    if (e.target.id === 'confirmModal') closeConfirmModalAndReset();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.getElementById('confirmModal').hidden) {
+      closeConfirmModalAndReset();
+    }
+  });
+});
+</script>
+</body>
+</html>
