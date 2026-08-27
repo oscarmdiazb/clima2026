@@ -1691,8 +1691,8 @@
       <div id="weekDaysPicker">
         <h4 class="chip-section-label">Elige el día</h4>
         <div class="chip-grid day-chip-grid" id="weekDaysChips"></div>
-        <button type="button" class="btn-link" id="showAllDatesBtn">
-          ⌄ El aula tampoco puede esta semana — ver todas las fechas disponibles
+        <button type="button" class="btn-otherday" id="showAllDatesBtn">
+          📅 ¿Tampoco puede esta semana? Haz clic aquí para ver todas las fechas
         </button>
       </div>
 
@@ -1776,11 +1776,11 @@
 
     <div id="contactFields">
       <div class="form-row">
-        <label for="contactInput">Contacto (docente o coordinador/a)</label>
-        <input type="text" id="contactInput" placeholder="Nombre completo" autocomplete="name" required />
+        <label for="contactInput">Persona de contacto para el ingreso al colegio — el equipo encuestador la llamará ese día para coordinar la entrada</label>
+        <input type="text" id="contactInput" placeholder="Nombre completo (docente, coordinador/a o quien reciba al equipo)" autocomplete="name" required />
       </div>
       <div class="form-row">
-        <label for="phoneInput">Teléfono</label>
+        <label for="phoneInput">Teléfono de esa persona (celular, idealmente con WhatsApp)</label>
         <input type="tel" id="phoneInput" placeholder="Solo números (ej. 3001234567)" inputmode="numeric" pattern="[0-9]+" autocomplete="tel" required />
       </div>
       <div class="form-row">
