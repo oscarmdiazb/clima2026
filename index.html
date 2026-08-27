@@ -1344,6 +1344,28 @@
   }
   .btn-otherday:hover { background: #fef3c7; }
 
+  /* Calendar buttons inside the confirmation modal */
+  .cm-cal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 14px 0 4px;
+  }
+  .cm-cal-btn {
+    display: inline-block;
+    background: #eff6ff;
+    border: 1.5px solid var(--primary);
+    border-radius: 8px;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 13.5px;
+    padding: 10px 14px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .cm-cal-btn:hover { background: #dbeafe; }
+
   /* Day-chip grid (week-fallback sub-step A) */
   .day-chip-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -1765,10 +1787,6 @@
         <label for="direccionInput">Dirección exacta de la sede (donde llega el equipo encuestador)</label>
         <input type="text" id="direccionInput" placeholder="Ej. Calle 26 Sur # 3-30 Este, barrio San Blas" autocomplete="street-address" required />
       </div>
-      <div class="form-row">
-        <label for="emailInput">Correo electrónico</label>
-        <input type="email" id="emailInput" placeholder="A este correo llegará la confirmación de la reserva" autocomplete="email" required />
-      </div>
     </div>
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" id="changeSlotBtn">← Cambiar hora</button>
@@ -1834,6 +1852,11 @@
         <div class="cm-reminder-title">No olvides enviar la notificación a las familias</div>
         <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="cm-reminder-btn">⬇ Descargar PDF</a>
       </div>
+    </div>
+
+    <div class="cm-cal-actions">
+      <a href="#" target="_blank" rel="noopener" class="cm-cal-btn" id="gcalBtn">📅 Añadir a Google Calendar</a>
+      <a href="#" class="cm-cal-btn" id="icsBtn">⬇ Descargar confirmación (.ics)</a>
     </div>
 
     <button type="button" class="btn btn-primary confirm-modal-close" id="confirmModalCloseBtn">Listo</button>
@@ -2767,9 +2790,55 @@ function showConfirmModal(date, hour, minute, sel, isReschedule) {
   if (meta.length) aulaParts.push(meta.join(' · '));
   document.getElementById('confirmModalAula').innerHTML =
     aulaParts.filter(Boolean).map(s => `<div>${escapeHtml_(s)}</div>`).join('');
+  setupCalendarButtons_(date, hour, minute, sel);
   document.getElementById('confirmModal').hidden = false;
   // Focus the close button for keyboard accessibility
   setTimeout(() => document.getElementById('confirmModalCloseBtn').focus(), 60);
+}
+
+// Wires the "Add to Google Calendar" and "Download .ics" buttons of the
+// confirmation modal to the just-booked slot. Times are written as floating
+// local time (no timezone suffix): the schools' devices are in Bogotá.
+function setupCalendarButtons_(date, hour, minute, sel) {
+  const pad = n => ('0' + n).slice(-2);
+  const stamp = (d, h, m) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(h)}${pad(m)}00`;
+  const endH = hour + 2;
+  const start = stamp(date, hour, minute);
+  const end   = stamp(date, endH, minute);
+
+  const titulo = `Encuesta de Clima de Aula — ${sel.colegio} · Aula ${sel.clase}`;
+  const direccion = (document.getElementById('direccionInput').value || '').trim();
+  const lugar = direccion || [sel.colegio, sel.sede && `Sede ${sel.sede}`].filter(Boolean).join(' — ');
+  const detalles =
+    `Visita del equipo encuestador (bloque de 2 horas).\n` +
+    `Jornada ${sel.jornada} · Aula ${sel.clase}.\n` +
+    `El equipo lleva todos los materiales; solo se necesita un salón sin interrupciones.\n` +
+    `Dudas: WhatsApp +57 301 959 78 22`;
+
+  const gcal = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+    '&text=' + encodeURIComponent(titulo) +
+    '&dates=' + start + '/' + end +
+    '&ctz=America/Bogota' +
+    '&details=' + encodeURIComponent(detalles) +
+    '&location=' + encodeURIComponent(lugar);
+  document.getElementById('gcalBtn').href = gcal;
+
+  const esc = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//OCE-SED//Encuesta Clima de Aula//ES',
+    'BEGIN:VEVENT',
+    'UID:' + start + '-' + (sel.dane || '') + '@encuesta-clima-aula',
+    'DTSTART:' + start,
+    'DTEND:' + end,
+    'SUMMARY:' + esc(titulo),
+    'DESCRIPTION:' + esc(detalles),
+    'LOCATION:' + esc(lugar),
+    'END:VEVENT', 'END:VCALENDAR'
+  ].join('\r\n');
+  const icsBtn = document.getElementById('icsBtn');
+  icsBtn.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+  icsBtn.setAttribute('download', 'reserva-encuesta-clima-aula.ics');
 }
 
 function closeConfirmModalAndReset() {
@@ -2777,6 +2846,7 @@ function closeConfirmModalAndReset() {
   // Now reset the form / page state
   document.getElementById('contactInput').value = '';
   document.getElementById('phoneInput').value = '';
+  document.getElementById('direccionInput').value = '';
   document.getElementById('contactFields').hidden = false;
   document.getElementById('localidadSelect').value = '';
   document.getElementById('schoolSelect').innerHTML = '<option value="">Primero selecciona la localidad</option>';
@@ -2853,15 +2923,12 @@ async function submitBooking() {
   const contact = document.getElementById('contactInput').value.trim();
   const phone = document.getElementById('phoneInput').value.trim();
   const direccion = document.getElementById('direccionInput').value.trim();
-  const email = document.getElementById('emailInput').value.trim();
 
   if (!document.getElementById('localidadSelect').value) return showFormError('Selecciona una localidad.');
   if (!contact) return showFormError('Ingresa el nombre del contacto.');
   if (!phone) return showFormError('Ingresa un teléfono.');
   if (!/^[0-9]{7,15}$/.test(phone)) return showFormError('El teléfono debe tener solo números (7 a 15 dígitos).');
   if (!direccion) return showFormError('Ingresa la dirección exacta de la sede.');
-  if (!email) return showFormError('Ingresa un correo electrónico para enviarte la confirmación.');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError('El correo electrónico no parece válido.');
 
   // Client-side check: bail early if this aula already has a reservation.
   // The backend re-checks too — this is just to avoid wasted submissions.
@@ -2917,8 +2984,7 @@ async function submitBooking() {
       dane: sel.dane,
       contact,
       phone,
-      direccion,
-      email
+      direccion
     });
     if (res && res.ok) {
       // Open the confirmation modal with the booking summary + consent reminder.

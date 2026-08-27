@@ -117,11 +117,8 @@ function doPost(e) {
     const direccion = (body && body.direccion) ? String(body.direccion).trim() : '';
     const email     = (body && body.email)     ? String(body.email).trim()     : '';
 
-    if (!slot || !school || !grade || !contact || !phone || !direccion || !email) {
+    if (!slot || !school || !grade || !contact || !phone || !direccion) {
       return jsonOut_({ ok: false, error: 'missing_fields' });
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return jsonOut_({ ok: false, error: 'invalid_email' });
     }
     if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(slot)) {
       return jsonOut_({ ok: false, error: 'invalid_slot' });
@@ -169,11 +166,6 @@ function doPost(e) {
     sheet.appendRow([
       new Date(), slot, localidad, school, jornada, grade, sede, dane, contact, phone, direccion, email
     ]);
-
-    // Correo de confirmación automático. Nunca tumba la reserva si falla.
-    try {
-      sendConfirmacionEmail_(email, contact, school, sede, jornada, grade, direccion, slot, false);
-    } catch (mailErr) { /* la reserva ya quedó; el correo es cortesía */ }
 
     return jsonOut_({ ok: true });
   } catch (err) {
@@ -380,64 +372,7 @@ function rescheduleReservation_(body) {
   sheet.getRange(targetRow, 2).setValue(newSlot);
   sheet.getRange(targetRow, 1).setValue(new Date());
 
-  // Correo de confirmación de la reprogramación (si la reserva tiene email).
-  try {
-    const r = values[targetRow - 2];
-    const rEmail = String(r[11] || '').trim();
-    if (rEmail) {
-      sendConfirmacionEmail_(rEmail, String(r[8] || ''), String(r[3] || ''),
-        String(r[6] || ''), String(r[4] || ''), String(r[5] || ''),
-        String(r[10] || ''), newSlot, true);
-    }
-  } catch (mailErr) { /* la reprogramación ya quedó */ }
-
   return jsonOut_({ ok: true, oldSlot: oldSlot, newSlot: newSlot });
-}
-
-// ---------- Correo de confirmación ----------
-// Se ejecuta como el dueño del despliegue, así que sale desde su cuenta.
-// Branding neutro: nunca nombrar la intervención (llega a T y C).
-function formatSlotEs_(slot) {
-  // slot = "YYYY-MM-DD HH:MM"
-  const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(slot);
-  if (!m) return slot;
-  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio',
-                 'agosto','septiembre','octubre','noviembre','diciembre'];
-  const dias  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  let h = Number(m[4]);
-  const ampm = h < 12 ? 'a.m.' : 'p.m.';
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return dias[d.getDay()] + ' ' + Number(m[3]) + ' de ' + meses[Number(m[2]) - 1] +
-         ' de ' + m[1] + ', ' + h12 + ':' + m[5] + ' ' + ampm;
-}
-
-function sendConfirmacionEmail_(email, contacto, colegio, sede, jornada, clase, direccion, slot, esReprogramacion) {
-  const cuando = formatSlotEs_(slot);
-  const asunto = (esReprogramacion ? 'Reprogramación confirmada' : 'Reserva confirmada') +
-                 ' — Encuesta de Clima de Aula · ' + colegio;
-  const pdfUrl = 'https://oscarmdiazb.github.io/reservas-clima-aula-seguimiento-2026/disentimiento-encuesta-clima-aula.pdf';
-  const cuerpo =
-    'Hola ' + contacto + ',\n\n' +
-    (esReprogramacion
-      ? 'Tu reserva para la Encuesta de Clima de Aula fue reprogramada con éxito.\n\n'
-      : 'Tu reserva para la Encuesta de Clima de Aula quedó confirmada.\n\n') +
-    'Colegio: ' + colegio + (sede && sede !== colegio ? ' — Sede ' + sede : '') + '\n' +
-    'Jornada: ' + jornada + '   Curso: ' + clase + '\n' +
-    'Fecha y hora: ' + cuando + ' (bloque de 2 horas)\n' +
-    (direccion ? 'Dirección registrada: ' + direccion + '\n' : '') + '\n' +
-    'Recuerda:\n' +
-    '- El equipo encuestador lleva todos los materiales (celulares y audífonos). ' +
-    'El colegio solo necesita un salón sin interrupciones.\n' +
-    '- Por favor entrega a los acudientes el documento de notificación a familias: ' + pdfUrl + '\n\n' +
-    '¿Cambios o dudas? WhatsApp del proyecto: +57 301 959 78 22\n\n' +
-    'Equipo Encuesta de Clima de Aula · OCE-SED';
-  MailApp.sendEmail({
-    to: email,
-    subject: asunto,
-    body: cuerpo,
-    name: 'Encuesta de Clima de Aula · OCE-SED'
-  });
 }
 
 function jsonOut_(obj) {
