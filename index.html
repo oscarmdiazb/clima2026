@@ -1326,6 +1326,24 @@
   }
   .btn-link:hover { text-decoration: underline; }
 
+  /* Prominent "change date" call-to-action — visible box, not a hidden link */
+  .btn-otherday {
+    display: block;
+    width: 100%;
+    background: #fffbeb;
+    border: 2px dashed #f59e0b;
+    border-radius: 10px;
+    color: #92400e;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 14px 16px;
+    margin-top: 16px;
+    text-align: center;
+  }
+  .btn-otherday:hover { background: #fef3c7; }
+
   /* Day-chip grid (week-fallback sub-step A) */
   .day-chip-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -1540,7 +1558,7 @@
         <div class="how-icon" aria-hidden="true">5</div>
         <div class="how-text">
           <strong>Recuerda hacer llegar a los acudientes el documento de notificación a familias.</strong>
-          <a href="notificacion-familias.pdf?v=1" download="notificacion-familias-encuesta-clima-aula.pdf" class="inline-download">Descárgalo aquí ⬇</a>
+          <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="inline-download">Descárgalo aquí ⬇</a>
         </div>
       </li>
     </ol>
@@ -1635,8 +1653,8 @@
         <h3 class="chip-section-label">Jornada tarde</h3>
         <div class="chip-grid" id="afternoonChips"></div>
       </div>
-      <button type="button" class="btn-link" id="showWeekBtn">
-        ⌄ El aula no está disponible ese día — reservar otro día de la semana
+      <button type="button" class="btn-otherday" id="showWeekBtn">
+        📅 ¿El aula NO puede ese día? Haz clic aquí para reservar otro día
       </button>
     </div>
 
@@ -1743,6 +1761,14 @@
         <label for="phoneInput">Teléfono</label>
         <input type="tel" id="phoneInput" placeholder="Solo números (ej. 3001234567)" inputmode="numeric" pattern="[0-9]+" autocomplete="tel" required />
       </div>
+      <div class="form-row">
+        <label for="direccionInput">Dirección exacta de la sede (donde llega el equipo encuestador)</label>
+        <input type="text" id="direccionInput" placeholder="Ej. Calle 26 Sur # 3-30 Este, barrio San Blas" autocomplete="street-address" required />
+      </div>
+      <div class="form-row">
+        <label for="emailInput">Correo electrónico</label>
+        <input type="email" id="emailInput" placeholder="A este correo llegará la confirmación de la reserva" autocomplete="email" required />
+      </div>
     </div>
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" id="changeSlotBtn">← Cambiar hora</button>
@@ -1806,7 +1832,7 @@
       <div class="cm-reminder-icon" aria-hidden="true">📄</div>
       <div class="cm-reminder-body">
         <div class="cm-reminder-title">No olvides enviar la notificación a las familias</div>
-        <a href="notificacion-familias.pdf?v=1" download="notificacion-familias-encuesta-clima-aula.pdf" class="cm-reminder-btn">⬇ Descargar PDF</a>
+        <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="cm-reminder-btn">⬇ Descargar PDF</a>
       </div>
     </div>
 
@@ -2277,10 +2303,10 @@ function showSlotPickerForAula(sel) {
     const showWeekBtn = document.getElementById('showWeekBtn');
     if (availOnAssigned === 0) {
       fullWarn.hidden = false;
-      showWeekBtn.textContent = '⌄ Ver otras fechas disponibles';
+      showWeekBtn.textContent = '📅 Ver otras fechas disponibles';
     } else {
       fullWarn.hidden = true;
-      showWeekBtn.textContent = '⌄ El aula no está disponible ese día — reservar otro día de la semana';
+      showWeekBtn.textContent = '📅 ¿El aula NO puede ese día? Haz clic aquí para reservar otro día';
     }
     return;
   }
@@ -2826,11 +2852,16 @@ async function submitBooking() {
 
   const contact = document.getElementById('contactInput').value.trim();
   const phone = document.getElementById('phoneInput').value.trim();
+  const direccion = document.getElementById('direccionInput').value.trim();
+  const email = document.getElementById('emailInput').value.trim();
 
   if (!document.getElementById('localidadSelect').value) return showFormError('Selecciona una localidad.');
   if (!contact) return showFormError('Ingresa el nombre del contacto.');
   if (!phone) return showFormError('Ingresa un teléfono.');
   if (!/^[0-9]{7,15}$/.test(phone)) return showFormError('El teléfono debe tener solo números (7 a 15 dígitos).');
+  if (!direccion) return showFormError('Ingresa la dirección exacta de la sede.');
+  if (!email) return showFormError('Ingresa un correo electrónico para enviarte la confirmación.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError('El correo electrónico no parece válido.');
 
   // Client-side check: bail early if this aula already has a reservation.
   // The backend re-checks too — this is just to avoid wasted submissions.
@@ -2885,7 +2916,9 @@ async function submitBooking() {
       sede: sel.sede,
       dane: sel.dane,
       contact,
-      phone
+      phone,
+      direccion,
+      email
     });
     if (res && res.ok) {
       // Open the confirmation modal with the booking summary + consent reminder.
