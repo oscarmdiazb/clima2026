@@ -873,12 +873,20 @@ function normJornada_(x) {
   return '';
 }
 
+// Todo lo que guardamos es TEXTO. Sin esto la Sheet convierte "0801" en el
+// número 801 y el curso pierde el cero de la izquierda — el mismo problema que
+// ya obligó a forzar texto plano en las columnas Slot y Teléfono de Reservas.
+function forzarTexto_(sheet, nCols) {
+  sheet.getRange(1, 1, Math.max(sheet.getMaxRows(), 2), nCols).setNumberFormat('@');
+}
+
 function getConfirmSheet_(crear) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let cs = ss.getSheetByName(CONFIRM_SHEET_NAME);
   if (!cs) {
     if (!crear) return null;
     cs = ss.insertSheet(CONFIRM_SHEET_NAME);
+    forzarTexto_(cs, CONFIRM_HEADER.length);
     cs.getRange(1, 1, 1, CONFIRM_HEADER.length).setValues([CONFIRM_HEADER]).setFontWeight('bold');
     cs.setFrozenRows(1);
     return cs;
@@ -887,6 +895,7 @@ function getConfirmSheet_(crear) {
   if (cs.getLastColumn() < CONFIRM_HEADER.length) {
     cs.getRange(1, 1, 1, CONFIRM_HEADER.length).setValues([CONFIRM_HEADER]).setFontWeight('bold');
   }
+  if (crear) forzarTexto_(cs, CONFIRM_HEADER.length);
   return cs;
 }
 
@@ -1028,6 +1037,7 @@ function getRosterForSchool_(dane, code) {
       if (daneKey_(cv[i][1]) !== k) continue;
       done[String(cv[i][3])] = {
         continua: String(cv[i][7]  || ''), curso:   String(cv[i][8]  || ''),
+        // (si una fila vieja perdió el cero, el colegio lo ve y lo corrige)
         jornada:  String(cv[i][9]  || ''), motivo:  String(cv[i][10] || ''),
         destino:  String(cv[i][11] || ''), nota:    String(cv[i][12] || '')
       };
@@ -1105,6 +1115,7 @@ function confirmarLista_(body) {
     ls.getRange(1, 1, 1, LOG_HEADER.length).setValues([LOG_HEADER]).setFontWeight('bold');
     ls.setFrozenRows(1);
   }
+  forzarTexto_(ls, LOG_HEADER.length);
   ls.appendRow([ts, daneReal, colegio, contacto, telefono, estado, out.length, nSi, nNo]);
 
   return jsonOut_({ ok: true, guardados: out.length, siguen: nSi, salieron: nNo, estado: estado });

@@ -57,6 +57,12 @@ colegio reemplaza sus filas anteriores):
 > La versión anterior tenía 9 columnas y añadía filas. Al pegar el `apps-script.gs` nuevo el
 > encabezado se amplía solo; las filas viejas quedan con las columnas nuevas vacías.
 
+> ⚠️ **Las pestañas de confirmación van en TEXTO PLANO.** Sin eso la Sheet convierte
+> `0801` en el número `801` y el curso pierde el cero de la izquierda. `forzarTexto_()`
+> lo aplica en cada envío; es el mismo cuidado que ya se tenía con las columnas
+> `Slot` y `Teléfono` de `Reservas`. Si alguna vez se recrea la pestaña a mano,
+> ponerla en *Formato → Número → Texto sin formato*.
+
 **Esta página nunca escribe en `Reservas`.** Solo la lee, para decirle al colegio cuándo es su
 visita. El agendamiento se sigue haciendo únicamente desde `index.html`.
 
