@@ -32,6 +32,7 @@ Diseñada para que un coordinador la termine en pocos minutos, desde el celular:
 
 | | |
 |---|---|
+| **Dos vías** | el colegio elige: llenar la lista **en la pantalla**, o **descargar un .xlsx ya lleno con los nombres**, completarlo en Excel y **subirlo**. Ver abajo |
 | **Curso y jornada** | por cada estudiante que sigue: el curso de 2026 (texto libre, con el curso promovido como pista en el placeholder) y un selector de **jornada** ya puesto en la de 2025, que el colegio cambia si hace falta |
 | **Guardar avance** | se puede enviar incompleto y seguir después con el mismo enlace |
 | **Autoguardado local** | lo marcado queda en `localStorage`; si cierran la página no se pierde |
@@ -44,6 +45,39 @@ Diseñada para que un coordinador la termine en pocos minutos, desde el celular:
 
 **Los nombres de los estudiantes nunca están en este repo ni en la página**: viven en la
 pestaña privada `RosterEstudiantes` y el backend solo los entrega con el código correcto.
+
+### La vía Excel
+
+El .xlsx se **genera y se lee en el navegador** con SheetJS (cargado de cdnjs solo cuando el
+colegio pulsa uno de los dos botones — la página no lo descarga si nadie lo usa). El backend
+no cambia: el archivo termina rellenando el mismo formulario y se envía por la misma ruta.
+
+Esto es deliberado. Un Excel devuelto **por correo** serían 95 archivos distintos que alguien
+tendría que abrir, limpiar y cargar a mano, sin que el colegio sepa nunca si llegó bien — y con
+nombres de menores viajando como adjunto. Aquí el colegio **ve en pantalla lo que entendimos**
+y confirma antes de enviar.
+
+La hoja `Estudiantes` sale con `#, Código, Estudiante, Curso 2025, Jornada 2025,
+¿Sigue en el colegio? (SI/NO), Curso 2026, Jornada 2026, Si ya no está: ¿qué pasó?,
+¿A qué colegio o ciudad se fue?`. `Jornada 2026` viene ya puesta con la de 2025. Los cursos y
+el código van forzados a texto (`t:'s'`, `z:'@'`) para que `0801` no se vuelva `801`. Una
+segunda hoja, `Instrucciones`, lista los valores aceptados.
+
+**El lector es deliberadamente tolerante**, porque el colegio no va a respetar la plantilla:
+
+| Se acepta | Se entiende como |
+|---|---|
+| `si` · `SÍ` · `S` · `x` · `1` · `sigue` | SI |
+| `no` · `N` · `0` · `ya no está` · `retirado` | NO |
+| `mañana` · `Mañana` · `M` — igual con T / U / C | MAÑANA / TARDE / ÚNICA / COMPLETA |
+| `se cambió a otro colegio`, `se retiró`, o el código interno | el motivo correspondiente |
+| jornada en blanco | la jornada de 2025 |
+
+También: encuentra la fila de encabezados aunque haya filas basura arriba (hasta 15), mapea las
+columnas **por su nombre, no por su posición**, busca la hoja correcta dentro del libro, cruza
+por `Código` y si falta por **nombre**, y acepta `.xlsx`, `.xls` y `.csv`. Lo que no reconoce lo
+**reporta en pantalla** (filas sin responder, estudiantes que no están en la lista) en vez de
+tragárselo en silencio.
 
 ### Pestañas que escribe el backend
 

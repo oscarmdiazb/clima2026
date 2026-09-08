@@ -55,6 +55,21 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 .fecha-box.no{background:var(--ambar-cl);color:var(--ambar)}
 .fecha-box b{font-size:1.02rem}
 
+/* ---- las dos formas de responder ---- */
+.vias{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 4px}
+.via{border:1px solid var(--linea);border-radius:10px;padding:14px;background:#fbfdfe}
+.via.destacada{border-color:var(--verde);background:#f4fbf7}
+.via h3{margin:0 0 4px;font-size:.95rem;color:var(--verde)}
+.via p{margin:0 0 10px;font-size:.88rem;color:var(--mut);line-height:1.45}
+.via .acciones{display:flex;flex-direction:column;gap:7px}
+.via button,.via .fakebtn{width:100%;text-align:center;padding:10px 12px;font-size:.9rem;
+  border-radius:8px;font-weight:700;cursor:pointer;display:block}
+.via .fakebtn{background:var(--blanco);color:var(--verde);border:1px solid var(--verde);
+  font-family:inherit}
+.via .fakebtn:hover{background:#eef8f2}
+.excel-detalle{font-size:.82rem;color:var(--mut);margin:10px 0 0;line-height:1.45}
+@media (max-width:640px){ .vias{grid-template-columns:1fr} }
+
 /* ---- barra de herramientas ---- */
 .tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 6px}
 .tools input[type=text]{flex:1 1 200px;min-width:0}
@@ -152,12 +167,28 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   <p class="sub" id="listMeta"></p>
   <div class="fecha-box hidden" id="fechaBox"></div>
 
-  <ol class="pasos">
-    <li>Para cada estudiante marque <b>Sigue</b> o <b>Ya no está en el colegio</b>.</li>
-    <li>Si sigue, escriba el <b>curso</b> y confirme la <b>jornada</b> de 2026.</li>
-    <li>Si ya no está, díganos <b>qué pasó</b> y, si lo saben, <b>a dónde se fue</b>.</li>
-  </ol>
+  <div class="vias">
+    <div class="via destacada">
+      <h3>Opción 1 · Aquí mismo</h3>
+      <p>Marque cada estudiante en la lista de abajo. Puede guardar a medias y
+         continuar después con el mismo enlace.</p>
+    </div>
+    <div class="via">
+      <h3>Opción 2 · En Excel</h3>
+      <p>Descargue la lista ya llena con los nombres, complétela en Excel y súbala.
+         La revisa aquí antes de enviarla.</p>
+      <div class="acciones">
+        <button class="sec" id="btnDescargar">Descargar la lista en Excel</button>
+        <label class="fakebtn" for="inpExcel">Subir el Excel diligenciado</label>
+        <input type="file" id="inpExcel" accept=".xlsx,.xls,.csv" style="display:none">
+      </div>
+    </div>
+  </div>
+  <p class="excel-detalle">Solo hay que llenar tres columnas: <b>¿Sigue en el colegio?</b>
+     (SI o NO), <b>Curso 2026</b> y <b>Jornada 2026</b> — la jornada ya viene puesta con la
+     de 2025. No cambie los nombres de las columnas ni borre la columna <b>Código</b>.</p>
 
+  <div class="msg" id="excelMsg"></div>
   <div class="msg warn" id="resumeMsg"></div>
 
   <div class="tools">
@@ -659,6 +690,233 @@ function mostrarRecibo(n){
   window.scrollTo(0, 0);
   try{ localStorage.removeItem(claveLocal()); }catch(e){}
 }
+
+
+/* ================= EXCEL: descargar y subir ================= */
+// La hoja se genera y se lee EN EL NAVEGADOR. Nada de archivos por correo:
+// los datos entran por el mismo camino que el formulario, y el colegio ve en
+// pantalla lo que entendimos antes de enviar.
+const SHEETJS_URL = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+let sheetjsCargando = null;
+
+function cargarSheetJS(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  if(sheetjsCargando) return sheetjsCargando;
+  sheetjsCargando = new Promise((ok, mal) => {
+    const t = document.createElement("script");
+    t.src = SHEETJS_URL;
+    t.onload  = () => window.XLSX ? ok(window.XLSX) : mal(new Error("no cargó"));
+    t.onerror = () => mal(new Error("sin conexión al servidor de la plantilla"));
+    document.head.appendChild(t);
+  });
+  return sheetjsCargando;
+}
+
+const COL = { num:0, id:1, nombre:2, clase25:3, jor25:4, sigue:5, curso26:6, jor26:7,
+              motivo:8, destino:9 };
+const ENCABEZADOS = ["#","Código","Estudiante","Curso 2025","Jornada 2025",
+                     "¿Sigue en el colegio? (SI/NO)","Curso 2026","Jornada 2026",
+                     "Si ya no está: ¿qué pasó?","¿A qué colegio o ciudad se fue?"];
+
+function mensajeExcel(clase, html){
+  const el = $("excelMsg");
+  el.className = "msg " + clase;
+  el.innerHTML = html;
+  el.style.display = "block";
+}
+
+/* ---------- descargar ---------- */
+async function descargarExcel(){
+  const btn = $("btnDescargar");
+  const antes = btn.textContent;
+  btn.disabled = true; btn.textContent = "Preparando…";
+  try{
+    const XLSX = await cargarSheetJS();
+    const filas = [ENCABEZADOS];
+    ESTADO.alumnos.forEach((a, i) => {
+      const m = ESTADO.marca[a.id] || {};
+      filas.push([ i + 1, a.id, a.nombre, a.clase || "", a.jornada || "",
+                   m.continua || "", m.curso || "",
+                   m.jornada || a.jornada || "",
+                   m.motivo ? (MOTIVOS.find(x => x[0] === m.motivo) || ["",""])[1] : "",
+                   m.destino || "" ]);
+    });
+    const hoja = XLSX.utils.aoa_to_sheet(filas);
+    // Todo como texto: si no, Excel convierte 0801 en 801.
+    for(let r = 1; r < filas.length; r++){
+      [COL.id, COL.clase25, COL.curso26].forEach(c => {
+        const ref = XLSX.utils.encode_cell({ r:r, c:c });
+        if(hoja[ref]){ hoja[ref].t = "s"; hoja[ref].z = "@"; }
+      });
+    }
+    hoja["!cols"] = [{wch:4},{wch:9},{wch:38},{wch:11},{wch:13},
+                     {wch:26},{wch:12},{wch:16},{wch:30},{wch:32}];
+    hoja["!autofilter"] = { ref: XLSX.utils.encode_range(
+      { s:{r:0,c:0}, e:{r:filas.length-1, c:ENCABEZADOS.length-1} }) };
+
+    const guia = [
+      ["Encuesta de Clima de Aula 2026 — cómo llenar esta hoja"],
+      [""],
+      ["1.", "Llene solo tres columnas: «¿Sigue en el colegio?», «Curso 2026» y «Jornada 2026»."],
+      ["2.", "«¿Sigue en el colegio?» se responde con SI o con NO."],
+      ["3.", "«Jornada 2026» ya viene con la de 2025. Cámbiela solo si cambió."],
+      ["4.", "Si respondió NO, llene «¿qué pasó?» y, si lo sabe, a dónde se fue."],
+      ["5.", "No cambie los nombres de las columnas ni borre la columna «Código»."],
+      ["6.", "Guarde el archivo y súbalo en la misma página donde lo descargó."],
+      [""],
+      ["Valores para «Jornada 2026»:", JORNADAS.filter(j => j[0]).map(j => j[0]).join("  ·  ")],
+      ["Valores para «¿qué pasó?»:",   MOTIVOS.filter(m => m[0]).map(m => m[1]).join("  ·  ")]
+    ];
+    const hg = XLSX.utils.aoa_to_sheet(guia);
+    hg["!cols"] = [{wch:28},{wch:80}];
+
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Estudiantes");
+    XLSX.utils.book_append_sheet(libro, hg, "Instrucciones");
+    const limpio = ESTADO.colegio.replace(/[\\\/:*?"<>|]/g, "").slice(0, 60).trim();
+    XLSX.writeFile(libro, "Lista de estudiantes - " + limpio + ".xlsx");
+    mensajeExcel("ok", "Descargamos <b>la lista de " + esc(ESTADO.colegio) + "</b>. " +
+      "Llénela en Excel y vuelva a esta página para subirla con el botón de arriba.");
+  }catch(e){
+    mensajeExcel("err", "No pudimos preparar el archivo: " + esc(e.message || e) +
+      ". Puede llenar la lista aquí mismo en la pantalla.");
+  }finally{ btn.disabled = false; btn.textContent = antes; }
+}
+
+/* ---------- leer lo que escribió el colegio ---------- */
+const sinTildes = t => String(t == null ? "" : t).trim().toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+function leerSiNo(v){
+  const t = sinTildes(v).replace(/[^a-z0-9]/g, "");
+  if(!t) return "";
+  if(["si","s","x","1","sigue","sigueenelcolegio","yes","y","continua"].indexOf(t) > -1) return "SI";
+  if(["no","n","0","noesta","yanoesta","retirado","seretiro"].indexOf(t) > -1) return "NO";
+  return "";
+}
+function leerJornada(v){
+  const t = sinTildes(v);
+  if(!t) return "";
+  if(t[0] === "m") return "MAÑANA";
+  if(t[0] === "t") return "TARDE";
+  if(t[0] === "u") return "ÚNICA";
+  if(t[0] === "c") return "COMPLETA";
+  return "";
+}
+function leerMotivo(v){
+  const t = sinTildes(v);
+  if(!t) return "";
+  for(let i = 0; i < MOTIVOS.length; i++){
+    if(!MOTIVOS[i][0]) continue;
+    if(t === MOTIVOS[i][0] || t === sinTildes(MOTIVOS[i][1])) return MOTIVOS[i][0];
+  }
+  if(t.indexOf("colegio") > -1)  return "otro_colegio";
+  if(t.indexOf("retir") > -1 || t.indexOf("desert") > -1) return "retiro";
+  if(t.indexOf("ciudad") > -1 || t.indexOf("pais") > -1 || t.indexOf("bogot") > -1) return "traslado_ciudad";
+  if(t.indexOf("nunca") > -1 || t.indexOf("error") > -1) return "nunca_estuvo";
+  return "no_sabemos";
+}
+
+// Busca la fila de encabezados aunque el colegio haya añadido filas arriba, y
+// mapea las columnas por su nombre, no por su posición.
+function mapearColumnas(filas){
+  for(let r = 0; r < Math.min(filas.length, 15); r++){
+    const fila = (filas[r] || []).map(sinTildes);
+    const mapa = {};
+    fila.forEach((celda, c) => {
+      if(!celda) return;
+      if(mapa.id      === undefined && celda.indexOf("codigo") > -1)  mapa.id = c;
+      if(mapa.nombre  === undefined && celda.indexOf("estudiante") > -1) mapa.nombre = c;
+      if(mapa.sigue   === undefined && celda.indexOf("sigue") > -1)   mapa.sigue = c;
+      if(mapa.curso26 === undefined && celda.indexOf("curso 2026") > -1) mapa.curso26 = c;
+      if(mapa.jor26   === undefined && celda.indexOf("jornada 2026") > -1) mapa.jor26 = c;
+      if(mapa.motivo  === undefined && celda.indexOf("que paso") > -1) mapa.motivo = c;
+      if(mapa.destino === undefined && (celda.indexOf("se fue") > -1)) mapa.destino = c;
+    });
+    if(mapa.sigue !== undefined && (mapa.id !== undefined || mapa.nombre !== undefined)){
+      return { fila: r, mapa: mapa };
+    }
+  }
+  return null;
+}
+
+async function subirExcel(archivo){
+  mensajeExcel("warn", "Leyendo <b>" + esc(archivo.name) + "</b>…");
+  try{
+    const XLSX  = await cargarSheetJS();
+    const datos = new Uint8Array(await archivo.arrayBuffer());
+    const libro = XLSX.read(datos, { type: "array" });
+    let filas = null, cab = null;
+    for(let i = 0; i < libro.SheetNames.length; i++){
+      const f = XLSX.utils.sheet_to_json(libro.Sheets[libro.SheetNames[i]],
+                  { header: 1, raw: false, defval: "" });
+      const c = mapearColumnas(f);
+      if(c){ filas = f; cab = c; break; }
+    }
+    if(!cab) throw new Error("no encontramos las columnas de la plantilla");
+
+    const porId = {}, porNombre = {};
+    ESTADO.alumnos.forEach(a => {
+      porId[String(a.id).trim().toUpperCase()] = a;
+      porNombre[sinTildes(a.nombre).replace(/\s+/g, " ")] = a;
+    });
+
+    let leidos = 0, vacios = 0;
+    const noReconocidos = [];
+    for(let r = cab.fila + 1; r < filas.length; r++){
+      const fila = filas[r] || [];
+      const idTxt = cab.mapa.id !== undefined ? String(fila[cab.mapa.id] || "").trim().toUpperCase() : "";
+      const nomTxt = cab.mapa.nombre !== undefined ? sinTildes(fila[cab.mapa.nombre]).replace(/\s+/g, " ") : "";
+      if(!idTxt && !nomTxt) continue;
+      const a = porId[idTxt] || porNombre[nomTxt];
+      if(!a){ noReconocidos.push(nomTxt || idTxt); continue; }
+
+      const sigue = leerSiNo(cab.mapa.sigue !== undefined ? fila[cab.mapa.sigue] : "");
+      if(!sigue){ vacios++; continue; }
+      if(sigue === "SI"){
+        ESTADO.marca[a.id] = { continua: "SI",
+          curso: String(cab.mapa.curso26 !== undefined ? fila[cab.mapa.curso26] : "").trim(),
+          jornada: leerJornada(cab.mapa.jor26 !== undefined ? fila[cab.mapa.jor26] : "") || a.jornada || "",
+          motivo: "", destino: "", nota: "" };
+      }else{
+        ESTADO.marca[a.id] = { continua: "NO", curso: "", jornada: "",
+          motivo: leerMotivo(cab.mapa.motivo !== undefined ? fila[cab.mapa.motivo] : ""),
+          destino: String(cab.mapa.destino !== undefined ? fila[cab.mapa.destino] : "").trim().slice(0, 120),
+          nota: "" };
+      }
+      leidos++;
+    }
+
+    if(!leidos) throw new Error("no había ninguna respuesta llena en el archivo");
+    guardarLocal(); pintarSugerencias(); pintar();
+
+    const f = faltantes();
+    let html = "Leímos <b>" + leidos + "</b> de <b>" + ESTADO.alumnos.length +
+      "</b> estudiantes. <b>Revise la lista de abajo</b> y, si está correcta, pulse " +
+      "<b>Enviar confirmación</b>.";
+    const avisos = [];
+    if(vacios) avisos.push(vacios + " fila(s) sin responder «¿Sigue en el colegio?»");
+    if(noReconocidos.length) avisos.push(noReconocidos.length +
+      " fila(s) que no están en la lista (" + esc(noReconocidos.slice(0, 3).join(", ")) + ")");
+    if(f.sinCurso.length)  avisos.push(f.sinCurso.length + " sin curso 2026");
+    if(f.sinMotivo.length) avisos.push(f.sinMotivo.length + " sin decir qué pasó");
+    if(avisos.length) html += "<br><br>Quedaron pendientes: " + avisos.join(" · ") +
+      ". Complételos aquí mismo en la pantalla.";
+    mensajeExcel(avisos.length ? "warn" : "ok", html);
+    $("listCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  }catch(e){
+    mensajeExcel("err", "No pudimos leer el archivo: " + esc(e.message || e) +
+      ".<br>Descargue de nuevo la plantilla y llénela sin cambiar los nombres de las " +
+      "columnas, o llene la lista aquí mismo en la pantalla.");
+  }
+}
+
+$("btnDescargar").addEventListener("click", descargarExcel);
+$("inpExcel").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if(f) subirExcel(f);
+  e.target.value = "";           // permite volver a subir el mismo archivo
+});
 
 /* ================= EVENTOS ================= */
 function sincronizarChips(){
