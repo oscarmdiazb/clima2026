@@ -3176,7 +3176,7 @@ async function submitReschedule(sel) {
       && assignedDate.getDate() === selectedSlot.date.getDate();
     if (!sameDay) {
       const ok = window.confirm(
-        `La fecha asignada a tu aula es ${formatDateLongShort(assignedDate)}, ` +
+        `La fecha asignada a tu grupo es ${formatDateLongShort(assignedDate)}, ` +
         `pero estás reprogramando al ${formatDateLongShort(selectedSlot.date)}.\n\n¿Continuar?`);
       if (!ok) return;
     }
@@ -3240,7 +3240,7 @@ async function submitBooking() {
   const existing = findExistingReservationForAula(sel);
   if (existing) {
     return showFormError(
-      `Esta aula ya tiene una reserva (${humanizeSlotKey(existing)}). ` +
+      `Este grupo ya tiene una reserva (${humanizeSlotKey(existing)}). ` +
       `Solo se permite una reserva por aula. Si necesitas cambiarla, ` +
       `cancela la anterior contactando al whatsapp del proyecto.`
     );
@@ -3258,7 +3258,7 @@ async function submitBooking() {
     );
     if (!sameDay) {
       const ok = window.confirm(
-        `La fecha asignada a tu aula es ${formatDateLongShort(assignedDate)}, ` +
+        `La fecha asignada a tu grupo es ${formatDateLongShort(assignedDate)}, ` +
         `pero estás reservando el ${formatDateLongShort(selectedSlot.date)}.\n\n` +
         `¿Quieres continuar de todos modos?`
       );
@@ -3307,7 +3307,7 @@ async function submitBooking() {
     } else if (res && res.error === 'aula_already_booked') {
       // Someone (the same user from another tab, or staff) booked first.
       // Send them back to step 1 and let setupStep2 show the already-booked banner.
-      showToast('Esta aula ya tiene una reserva. Si necesitas cambiarla, contacta al WhatsApp del proyecto.', 'error');
+      showToast('Este grupo ya tiene una reserva. Si necesitas cambiarla, contacta al WhatsApp del proyecto.', 'error');
       await refresh();
       selectedSlot = null;
       if (getSelectedColegio()) setupStep2ForSelectedAula();
