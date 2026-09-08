@@ -15,17 +15,59 @@ Fork de [`reservas-encuesta-clima-aula-2026-oce`](https://github.com/oscarmdiazb
 | **Confirmación de listas** | **Nueva página `c.html`**: el colegio confirma qué estudiantes de su lista siguen y en qué curso están. Ver abajo |
 | Backend | Despliegue **nuevo** de Apps Script sobre una Sheet **nueva** — no reutilizar la de R3 |
 
-## Confirmación de listas (`c.html`)
+## Confirmación de listas (`c.html`) — «¿dónde están hoy los estudiantes?»
 
-Cada colegio recibe en su correo un enlace personal:
+Cada colegio recibe un enlace personal. **Basta el código; el DANE ya no se escribe:**
 ```
-https://…/c.html?d=<DANE14>&c=<CÓDIGO>
+https://oscarmdiazb.github.io/clima2026/c.html?c=<CÓDIGO>
 ```
-La página pide DANE + código, trae del backend la lista de estudiantes de ese colegio, y el colegio marca **Sí/No continúa** y el **curso actual**. El envío escribe en la pestaña `ConfirmacionesLista`. **Los nombres de los estudiantes nunca están en este repo ni en la página**: viven en la pestaña privada `RosterEstudiantes` y el backend solo los entrega con el código correcto.
+(`&d=<DANE>` sigue aceptándose y solo hace falta si un código apuntara a dos sedes.)
+
+La página trae del backend la lista de estudiantes de ese colegio y, por cada uno, el colegio
+marca **Sigue / Ya no está**. Si sigue, el **curso de 2026**; si ya no está, **qué pasó** y
+**a dónde se fue**. El envío reescribe las filas de ese colegio en la pestaña
+`ConfirmacionesLista` y deja una fila de auditoría en `ConfirmacionesLog`.
+
+Diseñada para que un coordinador la termine en pocos minutos, desde el celular:
+
+| | |
+|---|---|
+| **Todos siguen en el colegio** | un botón marca de una vez a todos los no tocados y **propone el curso promovido** (0704 de 2025 → 0804 de 2026). El colegio solo corrige las excepciones |
+| **Guardar avance** | se puede enviar incompleto y seguir después con el mismo enlace |
+| **Autoguardado local** | lo marcado queda en `localStorage`; si cierran la página no se pierde |
+| **Reanudar** | al volver a entrar carga lo ya enviado al servidor y lo local (gana lo local) |
+| **Motivo de salida** | `otro_colegio` · `retiro` · `traslado_ciudad` · `nunca_estuvo` · `no_sabemos`, más el colegio o ciudad destino en texto libre |
+| **Buscador y filtros** | Todos / Sin marcar / Siguen / Ya no están |
+| **Fecha de la visita** | muestra la reserva (o la fecha preasignada); si no hay ninguna, enlaza a `index.html` para reservar |
+| **Recibo** | resumen imprimible al terminar |
+| Celular | tarjetas, no tabla; barra fija con el progreso |
+
+**Los nombres de los estudiantes nunca están en este repo ni en la página**: viven en la
+pestaña privada `RosterEstudiantes` y el backend solo los entrega con el código correcto.
+
+### Pestañas que escribe el backend
+
+`ConfirmacionesLista` — **una fila por estudiante, siempre el estado actual** (cada envío del
+colegio reemplaza sus filas anteriores):
+`Timestamp · DANE · Colegio · RowID · Nombre · ClaseOriginal · Continua · CursoActual · Motivo · ColegioDestino · Nota · Contacto · Telefono · Estado`
+
+`ConfirmacionesLog` — una fila por envío, nunca se borra:
+`Timestamp · DANE · Colegio · Contacto · Telefono · Estado · N_estudiantes · N_siguen · N_salieron`
+
+> La versión anterior tenía 9 columnas y añadía filas. Al pegar el `apps-script.gs` nuevo el
+> encabezado se amplía solo; las filas viejas quedan con las columnas nuevas vacías.
+
+### Monitoreo del avance
+
+```
+…/exec?tipo=confirmaciones&key=<CONTACTOS_KEY>
+```
+Una fila por colegio: `en_lista`, `marcados`, `siguen`, `salieron`, `estado`, `ultima`.
+Sin nombres de estudiantes. La clave vive en Propiedades del script, nunca en el repo.
 
 Insumos (NO commitear — están en `Encuesta/seguimiento_largo_plazo_r1r2/reservas/`):
-- `roster_para_sheet.csv` → se importa en la pestaña `RosterEstudiantes` (DANE, Codigo, RowID, Nombre, ClaseOriginal, Colegio).
-- `codigos_confirmacion.csv` → códigos y enlaces por colegio, para el mail-merge del correo.
+- `roster_para_sheet.csv` → pestaña `RosterEstudiantes` (DANE, Codigo, RowID, Nombre, ClaseOriginal, Colegio).
+- `codigos_confirmacion.csv` → códigos y enlaces por colegio, para el mail-merge.
 
 ## Setup (una vez, ~20 min)
 
