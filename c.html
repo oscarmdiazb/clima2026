@@ -289,7 +289,7 @@ const URL_RESERVAS = "./";   // index.html del mismo sitio: el aplicativo de res
 let ESTADO = {
   dane: "", code: "", colegio: "", fecha: null, fechaTipo: "", fechas: [],
   alumnos: [],            // [{id, nombre, clase}]
-  marca: {},              // id → {continua:'SI'|'NO', curso, motivo, destino, nota}
+  marca: {},              // id → {continua:'SI'|'NO', curso, jornada, motivo, nota}
   filtro: "todos", buscar: "", enviado: false
 };
 
@@ -356,7 +356,7 @@ async function cargar(code, dane){
       const p = previo[id];
       ESTADO.marca[id] = { continua: p.continua === "SI" ? "SI" : "NO",
         curso: p.curso || "", jornada: p.jornada || "", motivo: p.motivo || "",
-        destino: p.destino || "", nota: p.nota || "" };
+        nota: p.nota || "" };
     });
     const loc = leerLocal();
     if(loc && loc.marca) Object.keys(loc.marca).forEach(id => { ESTADO.marca[id] = loc.marca[id]; });
@@ -509,7 +509,6 @@ function fila(a, num){
       '<select class="motivo-in">' +
         MOTIVOS.map(o => '<option value="' + o[0] + '"' + (m.motivo === o[0] ? " selected" : "") + '>' + esc(o[1]) + '</option>').join("") +
       '</select>' +
-      '<input type="text" class="destino-in" placeholder="¿A qué colegio o ciudad se fue? (si lo sabe)" value="' + esc(m.destino || "") + '">' +
     '</div></div>';
   }
   div.innerHTML = html;
@@ -523,8 +522,7 @@ function fila(a, num){
         continua: v,
         curso:   v === "SI" ? ((cur && cur.curso) || "") : "",
         jornada: v === "SI" ? ((cur && cur.jornada) || a.jornada || "") : "",
-        motivo:  v === "NO" ? ((cur && cur.motivo)  || "") : "",
-        destino: v === "NO" ? ((cur && cur.destino) || "") : "",
+        motivo:  v === "NO" ? ((cur && cur.motivo) || "") : "",
         nota: ""
       };
     }
@@ -542,10 +540,6 @@ function fila(a, num){
   const mi = div.querySelector(".motivo-in");
   if(mi) mi.addEventListener("change", () => {
     ESTADO.marca[a.id].motivo = mi.value; guardarLocal(); progreso();
-  });
-  const di = div.querySelector(".destino-in");
-  if(di) di.addEventListener("input", () => {
-    ESTADO.marca[a.id].destino = di.value.trim(); guardarLocal();
   });
   return div;
 }
@@ -600,8 +594,7 @@ function recolectar(){
     const m = ESTADO.marca[a.id];
     if(!m) return;
     out.push({ id: a.id, continua: m.continua, curso: m.curso || "",
-               jornada: m.jornada || "", motivo: m.motivo || "",
-               destino: m.destino || "", nota: m.nota || "" });
+               jornada: m.jornada || "", motivo: m.motivo || "", nota: m.nota || "" });
   });
   return out;
 }
@@ -721,10 +714,10 @@ function cargarSheetJS(){
 }
 
 const COL = { num:0, id:1, nombre:2, clase25:3, jor25:4, sigue:5, curso26:6, jor26:7,
-              motivo:8, destino:9 };
+              motivo:8 };
 const ENCABEZADOS = ["#","Código","Estudiante","Curso 2025","Jornada 2025",
                      "¿Sigue en el colegio? (SI/NO)","Curso 2026","Jornada 2026",
-                     "Si ya no está: ¿qué pasó?","¿A qué colegio o ciudad se fue?"];
+                     "Si ya no está: ¿qué pasó?"];
 
 function mensajeExcel(clase, html){
   const el = $("excelMsg");
@@ -746,8 +739,7 @@ async function descargarExcel(){
       filas.push([ i + 1, a.id, a.nombre, a.clase || "", a.jornada || "",
                    m.continua || "", m.curso || "",
                    m.jornada || a.jornada || "",
-                   m.motivo ? (MOTIVOS.find(x => x[0] === m.motivo) || ["",""])[1] : "",
-                   m.destino || "" ]);
+                   m.motivo ? (MOTIVOS.find(x => x[0] === m.motivo) || ["",""])[1] : "" ]);
     });
     const hoja = XLSX.utils.aoa_to_sheet(filas);
     // Todo como texto: si no, Excel convierte 0801 en 801.
@@ -758,7 +750,7 @@ async function descargarExcel(){
       });
     }
     hoja["!cols"] = [{wch:4},{wch:9},{wch:38},{wch:11},{wch:13},
-                     {wch:26},{wch:12},{wch:16},{wch:30},{wch:32}];
+                     {wch:26},{wch:12},{wch:16},{wch:30}];
     hoja["!autofilter"] = { ref: XLSX.utils.encode_range(
       { s:{r:0,c:0}, e:{r:filas.length-1, c:ENCABEZADOS.length-1} }) };
 
@@ -768,7 +760,7 @@ async function descargarExcel(){
       ["1.", "Llene solo tres columnas: «¿Sigue en el colegio?», «Curso 2026» y «Jornada 2026»."],
       ["2.", "«¿Sigue en el colegio?» se responde con SI o con NO."],
       ["3.", "«Jornada 2026» ya viene con la de 2025. Cámbiela solo si cambió."],
-      ["4.", "Si respondió NO, llene «¿qué pasó?» y, si lo sabe, a dónde se fue."],
+      ["4.", "Si respondió NO, marque «¿qué pasó?». Nada más."],
       ["5.", "No cambie los nombres de las columnas ni borre la columna «Código»."],
       ["6.", "Guarde el archivo y súbalo en la misma página donde lo descargó."],
       [""],
@@ -839,7 +831,6 @@ function mapearColumnas(filas){
       if(mapa.curso26 === undefined && celda.indexOf("curso 2026") > -1) mapa.curso26 = c;
       if(mapa.jor26   === undefined && celda.indexOf("jornada 2026") > -1) mapa.jor26 = c;
       if(mapa.motivo  === undefined && celda.indexOf("que paso") > -1) mapa.motivo = c;
-      if(mapa.destino === undefined && (celda.indexOf("se fue") > -1)) mapa.destino = c;
     });
     if(mapa.sigue !== undefined && (mapa.id !== undefined || mapa.nombre !== undefined)){
       return { fila: r, mapa: mapa };
@@ -885,11 +876,10 @@ async function subirExcel(archivo){
         ESTADO.marca[a.id] = { continua: "SI",
           curso: String(cab.mapa.curso26 !== undefined ? fila[cab.mapa.curso26] : "").trim(),
           jornada: leerJornada(cab.mapa.jor26 !== undefined ? fila[cab.mapa.jor26] : "") || a.jornada || "",
-          motivo: "", destino: "", nota: "" };
+          motivo: "", nota: "" };
       }else{
         ESTADO.marca[a.id] = { continua: "NO", curso: "", jornada: "",
           motivo: leerMotivo(cab.mapa.motivo !== undefined ? fila[cab.mapa.motivo] : ""),
-          destino: String(cab.mapa.destino !== undefined ? fila[cab.mapa.destino] : "").trim().slice(0, 120),
           nota: "" };
       }
       leidos++;
@@ -957,8 +947,7 @@ async function descargarPlanVisita(boton){
                       curso:m.curso || "", jornada:m.jornada || a.jornada || "" });
       }else{
         salieron.push({ nombre:a.nombre, clase:a.clase,
-          motivo:(MOTIVOS.find(x => x[0] === m.motivo) || ["",""])[1],
-          destino:m.destino || "" });
+          motivo:(MOTIVOS.find(x => x[0] === m.motivo) || ["",""])[1] });
       }
     });
     siguen.sort(compararCurso);
@@ -996,10 +985,10 @@ async function descargarPlanVisita(boton){
 
     if(salieron.length){
       const a2 = [["Estudiantes que ya no están en el colegio"], [ESTADO.colegio], [""],
-                  ["Estudiante", "Curso 2025", "¿Qué pasó?", "¿A dónde se fue?"]];
-      salieron.forEach(e => a2.push([e.nombre, e.clase || "", e.motivo, e.destino]));
+                  ["Estudiante", "Curso 2025", "¿Qué pasó?"]];
+      salieron.forEach(e => a2.push([e.nombre, e.clase || "", e.motivo]));
       const h2 = XLSX.utils.aoa_to_sheet(a2);
-      h2["!cols"] = [{wch:40},{wch:11},{wch:34},{wch:34}];
+      h2["!cols"] = [{wch:40},{wch:11},{wch:34}];
       XLSX.utils.book_append_sheet(libro, h2, "Ya no están");
     }
     if(sinMarcar.length){

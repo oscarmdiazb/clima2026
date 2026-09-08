@@ -847,6 +847,10 @@ function crearTriggerDiarioLlamadas() {
 const ROSTER_SHEET_NAME  = 'RosterEstudiantes';
 const CONFIRM_SHEET_NAME = 'ConfirmacionesLista';
 const LOG_SHEET_NAME     = 'ConfirmacionesLog';
+// ColegioDestino queda pero SIEMPRE VACÍA: el 8-sep-2026 se quitó del formulario
+// la pregunta «¿a dónde se fue?» — los colegios no lo saben y la pregunta hacía
+// ver la tarea más pesada de lo que es. La columna se conserva para no obligar a
+// redesplegar el script; el backend sigue aceptando el campo si alguna vez vuelve.
 const CONFIRM_HEADER = ['Timestamp','DANE','Colegio','RowID','Nombre',
                         'ClaseOriginal','JornadaOriginal',
                         'Continua','CursoActual','JornadaActual',
