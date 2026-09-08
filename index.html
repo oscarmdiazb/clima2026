@@ -759,51 +759,30 @@
   }
   .step-hint strong { color: #92400e; font-weight: 800; }
 
-  /* ----- Key alert: quiénes son los encuestados ----- */
-  .key-alert {
+  /* ----- Botón de instrucciones completas ----- */
+  .instr-cta {
     display: flex;
-    gap: 14px;
-    align-items: flex-start;
-    background: #fffbeb;
-    border: 2px solid #f59e0b;
-    border-radius: 12px;
-    padding: 18px 20px;
-    margin: 20px 0 16px;
-    box-shadow: var(--shadow);
-  }
-  .key-alert-icon { font-size: 26px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
-  .key-alert-body { flex: 1; min-width: 0; }
-  .key-alert h2 {
-    font-size: 17px;
-    font-weight: 800;
-    color: #78350f;
-    margin: 0 0 8px;
-    line-height: 1.3;
-  }
-  .key-alert p {
-    font-size: 14.5px;
-    line-height: 1.5;
-    color: #713f12;
-    margin: 0 0 8px;
-  }
-  .key-alert p:last-of-type { margin-bottom: 12px; }
-  .key-alert strong { font-weight: 800; color: #78350f; }
-  .key-alert-btn {
-    background: #b45309;
-    color: #fff;
-    border: 0;
-    border-radius: 9px;
-    padding: 12px 18px;
-    font-family: inherit;
-    font-size: 14.5px;
-    font-weight: 800;
-    cursor: pointer;
+    align-items: center;
+    gap: 10px;
     width: 100%;
-    text-align: center;
+    margin-top: 14px;
+    padding: 13px 14px;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 10px;
+    color: #78350f;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
   }
-  .key-alert-btn:hover { background: #92400e; }
-  .key-alert-btn:active { transform: scale(0.99); }
-  @media (min-width: 640px) { .key-alert-btn { width: auto; } }
+  .instr-cta:hover { background: #fde68a; }
+  .instr-cta:active { transform: scale(0.99); }
+  .instr-cta-icon { font-size: 18px; flex-shrink: 0; }
+  .instr-cta-text { flex: 1; line-height: 1.35; }
+  .instr-cta-arrow { font-size: 16px; flex-shrink: 0; }
 
   /* ----- Instrucciones (modal) ----- */
   .instr-backdrop {
@@ -918,6 +897,19 @@
     margin-top: 4px;
   }
   .instr-btn:hover { background: var(--primary-hover); }
+  .instr-btn + .instr-btn { margin-left: 8px; }
+  .instr-btn-alt { background: #b45309; }
+  .instr-btn-alt:hover { background: #92400e; }
+  .instr-mini {
+    font-size: 12.5px !important;
+    color: var(--muted) !important;
+    margin: 8px 0 0 !important;
+    line-height: 1.45;
+  }
+  @media (max-width: 560px) {
+    .instr-btn { display: block; text-align: center; }
+    .instr-btn + .instr-btn { margin-left: 0; margin-top: 8px; }
+  }
   .instr-foot {
     position: sticky;
     bottom: 0;
@@ -1737,16 +1729,6 @@
     <p class="lead">La encuesta se aplica a <strong>los mismos estudiantes que participaron en 2025</strong> — la lista nominal que enviamos al correo del colegio. A cada grupo se le asignó un día por logística: aquí solo eliges la hora.</p>
   </header>
 
-  <section class="key-alert">
-    <div class="key-alert-icon" aria-hidden="true">👥</div>
-    <div class="key-alert-body">
-      <h2>La encuesta es a los estudiantes de la lista, no al curso que hoy ocupa ese salón</h2>
-      <p>Encuestamos a <strong>los mismos estudiantes que participaron en 2025</strong>. Su lista nominal fue enviada al correo del colegio.</p>
-      <p>Hoy esos estudiantes están repartidos en <strong>cursos distintos</strong>, y algunos en otra jornada. El día de la visita el colegio debe <strong>reunir a los estudiantes de esa lista</strong> en un solo espacio, sin importar el curso en el que estén ahora.</p>
-      <button type="button" class="key-alert-btn" id="openInstructionsBtn">📋 Ver las instrucciones completas de la encuesta</button>
-    </div>
-  </section>
-
   <section class="how-card">
     <ol class="how-steps">
       <li>
@@ -1776,8 +1758,9 @@
       <li>
         <div class="how-icon" aria-hidden="true">5</div>
         <div class="how-text">
-          <strong>Haz llegar a los acudientes el documento de notificación a familias.</strong> No hace falta enviárnoslo: basta con tenerlo disponible el día de la visita.
-          <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="inline-download">Descárgalo aquí ⬇</a>
+          <strong>Revisa la lista de estudiantes y haz llegar a los acudientes el documento de notificación a familias.</strong> No hace falta enviárnoslo: basta con tenerlo disponible el día de la visita.
+          <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="inline-download">Descarga la notificación ⬇</a>
+          <a href="c.html" target="_blank" rel="noopener" class="inline-download">Ver y confirmar la lista de estudiantes ↗</a>
         </div>
       </li>
       <li>
@@ -1787,6 +1770,12 @@
         </div>
       </li>
     </ol>
+
+    <button type="button" class="instr-cta" id="openInstructionsBtn">
+      <span class="instr-cta-icon" aria-hidden="true">📋</span>
+      <span class="instr-cta-text">Ver las instrucciones completas de la encuesta</span>
+      <span class="instr-cta-arrow" aria-hidden="true">→</span>
+    </button>
 
     <a class="whatsapp-cta" href="https://wa.me/573019597822" target="_blank" rel="noopener">
       <span class="wa-icon" aria-hidden="true">💬</span>
@@ -2046,62 +2035,56 @@
     <div class="instr-body">
 
       <div class="instr-sec">
-        <h3>1. ¿A quién se le aplica la encuesta?</h3>
+        <h3>De qué se trata</h3>
+        <p>Le escribimos desde la <strong>Oficina para la Convivencia Escolar de la Secretaría de Educación del Distrito</strong>, en alianza con el equipo de investigación de la <strong>Escuela de Economía de París</strong> (Paris School of Economics), a propósito del estudio de clima de aula que adelantamos con 100 colegios de la ciudad y del que su institución hace parte desde 2025. Le agradecemos de nuevo la disposición que tuvo el colegio el año pasado: gracias a su ayuda hemos podido aprender enormemente sobre la convivencia en las aulas de la ciudad.</p>
         <div class="instr-callout">
-          <p><strong>A los mismos estudiantes que participaron en 2025</strong>, uno por uno, según la lista nominal que enviamos al correo del colegio. <strong>No se le aplica al curso que hoy ocupa ese salón.</strong></p>
+          <p><strong>El estudio culmina este año</strong>, y para cerrarlo necesitamos una última medición: una encuesta de seguimiento a <strong>LOS MISMOS ESTUDIANTES que participaron en 2025</strong> — los estudiantes de su institución cuya lista nominal fue adjuntada al correo —, para observar cómo han evolucionado con el tiempo la convivencia, las relaciones entre compañeros, el bienestar emocional y el desempeño académico.</p>
         </div>
-        <p>El estudio empezó en 2025 con un curso de su institución. Este año medimos otra vez a <strong>esos mismos estudiantes</strong>, para ver cómo han cambiado con el tiempo la convivencia, las relaciones entre compañeros, el bienestar emocional y el desempeño académico.</p>
-        <p>Un año después, esos estudiantes ya <strong>no están todos juntos</strong>: pasaron de grado, cambiaron de curso y algunos cambiaron de jornada. Por eso el colegio debe <strong>reunirlos a ellos</strong> el día de la visita, aunque hoy pertenezcan a cursos distintos.</p>
+        <p>Es la misma medición del año pasado, aplicada de la misma manera en todas las instituciones vinculadas al estudio, y <strong>de ninguna manera busca evaluar a la institución, a sus docentes o a sus estudiantes</strong>.</p>
         <div class="instr-good">
-          <p><strong>Si un estudiante de la lista ya no está en el colegio</strong>, no hay que hacer nada especial: solo indíquelo al equipo el día de la visita. Nadie que no esté en la lista debe presentarse.</p>
+          <p><strong>La encuesta es a esos estudiantes, no al curso que hoy ocupa ese salón.</strong> Un año después ya no están todos juntos: pasaron de grado y cambiaron de curso, y algunos de jornada. El día de la visita el colegio debe reunir a los estudiantes de la lista en el espacio acordado, sin importar el curso en el que estén ahora. Si alguno ya no está en el colegio, basta con indicarlo.</p>
         </div>
-        <p>Es la misma medición del año pasado, aplicada de la misma manera en todas las instituciones vinculadas al estudio. <strong>De ninguna manera busca evaluar a la institución, a sus docentes o a sus estudiantes.</strong></p>
       </div>
 
       <div class="instr-sec">
-        <h3>2. Cómo funciona la visita</h3>
-        <ul>
-          <li><strong>Dura un solo bloque de clase.</strong> La encuesta combina preguntas y juegos interactivos.</li>
-          <li><strong>Llevamos todo lo necesario</strong> — celulares, audífonos y demás materiales. El colegio <strong>no necesita internet ni computadores</strong>.</li>
-          <li><strong>Solo pedimos un espacio sin interrupciones</strong> donde los estudiantes de la lista puedan trabajar. Una biblioteca o un salón disponible funciona perfectamente.</li>
-          <li><strong>Llevamos dulces de regalo</strong> para los estudiantes, en agradecimiento por su participación.</li>
-          <li>Una persona de contacto del colegio recibe al equipo. El equipo la llamará ese día para coordinar el ingreso.</li>
-        </ul>
+        <h3>Cómo funciona la visita</h3>
+        <p>Llevamos todo lo necesario — celulares, audífonos y demás materiales —, así que <strong>el colegio no necesita disponer de internet ni de computadores</strong>. Solo pedimos un espacio donde los estudiantes de la lista puedan trabajar sin interrupciones (una biblioteca o un salón disponible funciona perfectamente).</p>
+        <p>La aplicación toma <strong>UN SOLO BLOQUE DE CLASE</strong>: la encuesta combina preguntas y juegos interactivos, y para agradecerles su participación llevaremos unos dulces de regalo para los estudiantes.</p>
       </div>
 
       <div class="instr-sec">
-        <h3>3. Le pedimos tres cosas concretas</h3>
+        <h3>Le pedimos tres cosas concretas</h3>
         <ol>
           <li>
-            <strong>Confirmar la fecha y la hora de la visita, en esta misma página.</strong>
-            A su institución ya le asignamos un día, pensando en la programación general de visitas. Si le viene bien, basta con confirmar la hora. Si no le conviene, en esta página puede elegir libremente otra fecha entre el <strong>15 de septiembre y el 30 de octubre de 2026</strong>. Los cupos por día son limitados y se asignan en orden de reserva, así que agradecemos hacerlo con la mayor anticipación posible.
+            <strong>CONFIRMAR LA FECHA DE LA VISITA.</strong> Hemos asignado a su institución un día, pensando en la programación general de visitas; si les viene bien esa fecha, basta con confirmar en esta página la hora de la visita. Si no les conviene, en esta misma página pueden elegir libremente la fecha que mejor se ajuste a la institución, <strong>entre el 15 de septiembre y el 30 de octubre</strong>. Los cupos por día son limitados y se asignan en orden de reserva, así que agradecemos hacerlo con la mayor anticipación posible.
           </li>
           <li>
-            <strong>Revisar la lista de estudiantes que llegó al correo</strong> — para que estén preparados el día de la visita — y <strong>hacer llegar a las familias el documento de notificación</strong>. Si un padre o acudiente no desea que su hijo o hija participe, puede manifestarlo por ese medio; ningún estudiante cuya familia haya expresado su negativa será encuestado. No hace falta enviárnoslos: basta con tenerlos disponibles el día de la encuesta.
+            <strong>REVISAR LA LISTA DE ESTUDIANTES ADJUNTA</strong> al correo, para que estén preparados el día de la visita, y <strong>HACER LLEGAR A LAS FAMILIAS EL DOCUMENTO DE NOTIFICACIÓN</strong>. Si algún padre o acudiente no desea que su hijo o hija participe, puede manifestarlo por ese medio; ningún estudiante cuya familia haya expresado su negativa será encuestado. No hace falta enviárnoslos: basta con que los tengan disponibles el día de la encuesta.
             <br>
-            <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="instr-btn">⬇ Descargar el documento de notificación a familias</a>
+            <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="instr-btn">⬇ Descargar el documento de notificación</a>
+            <a href="c.html" target="_blank" rel="noopener" class="instr-btn instr-btn-alt">👥 Ver y confirmar la lista de estudiantes en línea</a>
+            <p class="instr-mini">La página de la lista pide el código DANE de la sede y el código de acceso que viene en el correo de invitación. Allí puede marcar, estudiante por estudiante, si continúa en la institución y en qué curso está este año.</p>
           </li>
           <li>
-            <strong>Tener disponibles los registros de asistencia y de disciplina</strong> (planillas y observador del estudiante) de los estudiantes de la lista. El día de la visita nuestro equipo cuenta el número de inasistencias y de faltas de disciplina, <strong>sin registrar el detalle de los sucesos</strong>. Esta información nos permite ver cómo el clima de aula influye en el comportamiento de los estudiantes. Todo se trata de manera anónima y confidencial.
+            <strong>TENER DISPONIBLES LOS REGISTROS DE ASISTENCIA Y DE DISCIPLINA</strong> (planillas y observador del estudiante) para los estudiantes de la lista. El día de la visita, nuestro equipo va a contar el número de inasistencias de los estudiantes y de faltas de disciplina (<strong>sin registrar el detalle de los sucesos</strong>). Esta información es de suma importancia porque nos permite ver cómo el clima de aula influye en el comportamiento de los estudiantes. Todo esto se tratará con total confidencialidad y de manera anónima.
           </li>
         </ol>
       </div>
 
       <div class="instr-sec">
-        <h3>4. Qué recibe el colegio</h3>
-        <p>Al cierre del estudio, su institución recibirá un <strong>reconocimiento por su apoyo</strong> y un <strong>reporte con los resultados y recomendaciones concretas</strong> en convivencia escolar, salud emocional y apoyo pedagógico.</p>
-        <p>Además, quedan invitados a la <strong>jornada de presentación de resultados: martes 2 de febrero de 2027</strong>, una conferencia con desayuno incluido. El lugar se comunicará más adelante.</p>
+        <h3>Qué recibe el colegio</h3>
+        <p>Al cierre del estudio, su institución recibirá un <strong>reconocimiento por su apoyo al estudio</strong> y un <strong>reporte con los resultados y recomendaciones concretas</strong> en convivencia escolar, salud emocional y apoyo pedagógico.</p>
+        <p>Además, queremos invitarlos desde ya a la jornada de presentación de resultados: una <strong>conferencia con desayuno incluido, el martes 2 de febrero de 2027</strong> — el lugar lo comunicaremos más adelante —, en la que expondremos ante los colegios participantes y la Secretaría los hallazgos de estos dos años.</p>
       </div>
 
       <div class="instr-sec">
-        <h3>5. Confidencialidad</h3>
-        <p>El estudio lo adelanta la <strong>Oficina para la Convivencia Escolar de la Secretaría de Educación del Distrito</strong>, en alianza con el equipo de investigación de la <strong>Escuela de Economía de París</strong> (Paris School of Economics).</p>
+        <h3>Confidencialidad</h3>
         <p>La participación es confidencial y está aprobada por el comité de ética de la Escuela de Economía de París. La información se maneja de forma anónima y se utiliza únicamente con fines de investigación.</p>
       </div>
 
       <div class="instr-sec">
-        <h3>6. ¿Dudas?</h3>
-        <p>Escríbanos al WhatsApp del proyecto: <a href="https://wa.me/573019597822" target="_blank" rel="noopener" class="wa-inline-link"><strong>+57 301 959 78 22</strong></a>.</p>
+        <h3>¿Dudas?</h3>
+        <p>Para cualquier información, pueden comunicarse al WhatsApp del proyecto: <a href="https://wa.me/573019597822" target="_blank" rel="noopener" class="wa-inline-link"><strong>+57 301 959 78 22</strong></a>.</p>
       </div>
 
     </div>
