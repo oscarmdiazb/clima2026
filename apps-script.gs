@@ -834,9 +834,12 @@ function crearTriggerDiarioLlamadas() {
 // ==================== Confirmación de listas de estudiantes ====================
 // Responde: ¿dónde está hoy cada estudiante de la lista de 2025?
 //
+// SOLO LEE la pestaña Reservas (para mostrarle al colegio la fecha de su visita).
+// Nunca la escribe: el agendamiento no se toca desde aquí.
+//
 // Pestaña RosterEstudiantes (privada, cargada desde roster_para_sheet.csv):
 //   A: DANE   B: Codigo (acceso del colegio)   C: RowID
-//   D: Nombre  E: ClaseOriginal  F: Colegio
+//   D: Nombre  E: ClaseOriginal  F: Colegio  G: ClassID (DANE-JORNADA-CLASE, opcional)
 // Pestaña ConfirmacionesLista (la escribe el servidor). UNA fila por estudiante:
 //   cada envío del colegio REEMPLAZA sus filas anteriores, así la pestaña
 //   siempre es el estado actual y se puede leer directo en el análisis.
@@ -844,16 +847,31 @@ function crearTriggerDiarioLlamadas() {
 const ROSTER_SHEET_NAME  = 'RosterEstudiantes';
 const CONFIRM_SHEET_NAME = 'ConfirmacionesLista';
 const LOG_SHEET_NAME     = 'ConfirmacionesLog';
-const CONFIRM_HEADER = ['Timestamp','DANE','Colegio','RowID','Nombre','ClaseOriginal',
-                        'Continua','CursoActual','Motivo','ColegioDestino','Nota',
+const CONFIRM_HEADER = ['Timestamp','DANE','Colegio','RowID','Nombre',
+                        'ClaseOriginal','JornadaOriginal',
+                        'Continua','CursoActual','JornadaActual',
+                        'Motivo','ColegioDestino','Nota',
                         'Contacto','Telefono','Estado'];
 const LOG_HEADER = ['Timestamp','DANE','Colegio','Contacto','Telefono','Estado',
                     'N_estudiantes','N_siguen','N_salieron'];
+const JORNADAS_OK = ['MAÑANA','TARDE','ÚNICA','COMPLETA'];
 
 function normDane_(x) { return String(x || '').trim().replace(/\.0+$/, ''); }
 // Los DANE llegan a veces con 12 dígitos (establecimiento) y a veces con 14
 // (sede). Comparamos por los primeros 12 para que ambos casen.
 function daneKey_(x) { return normDane_(x).slice(0, 12); }
+
+function claseKey_(x) { return String(x || '').trim().toUpperCase().replace(/^0+/, ''); }
+
+function normJornada_(x) {
+  const s = String(x || '').trim().toUpperCase()
+    .replace(/Á/g, 'A').replace(/Ñ/g, 'N').replace(/Ú/g, 'U');
+  if (s.indexOf('MAN')  === 0) return 'MAÑANA';
+  if (s.indexOf('TAR')  === 0) return 'TARDE';
+  if (s.indexOf('UNI')  === 0) return 'ÚNICA';
+  if (s.indexOf('COMP') === 0) return 'COMPLETA';
+  return '';
+}
 
 function getConfirmSheet_(crear) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -865,47 +883,79 @@ function getConfirmSheet_(crear) {
     cs.setFrozenRows(1);
     return cs;
   }
-  // Migración: la versión anterior tenía 9 columnas. Si el encabezado es más
-  // corto, lo reescribimos (las filas viejas quedan con las columnas nuevas vacías).
+  // Si el encabezado es de una versión anterior (más corto), lo reescribimos.
   if (cs.getLastColumn() < CONFIRM_HEADER.length) {
     cs.getRange(1, 1, 1, CONFIRM_HEADER.length).setValues([CONFIRM_HEADER]).setFontWeight('bold');
   }
   return cs;
 }
 
-// Fecha de la visita: primero la reserva real, si no la fecha preasignada.
-function getFechaForDane_(dane) {
+// Asignaciones completas: una entrada por aula, con jornada y clase.
+function getAssignmentsFull_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(ASSIGNMENTS_SHEET_NAME);
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
+  const out = [];
+  for (let i = 0; i < values.length; i++) {
+    const row = values[i];
+    const jornada = String(row[2] || '').trim();
+    const clase   = String(row[3] || '').trim();
+    let   fecha   = row[4];
+    const dane    = normDane_(row[6]);
+    if (!dane || !clase) continue;
+    if (Object.prototype.toString.call(fecha) === '[object Date]') {
+      fecha = Utilities.formatDate(fecha, TIMEZONE, 'yyyy-MM-dd');
+    } else {
+      fecha = String(fecha || '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) fecha = '';
+    }
+    out.push({ dane12: daneKey_(dane), jornada: jornada, clase: clase, fecha: fecha });
+  }
+  return out;
+}
+
+// Fechas de visita del colegio: la reserva real manda; si un aula no ha
+// reservado, se muestra su fecha preasignada. SOLO LECTURA sobre Reservas.
+function getFechasForDane_(dane) {
   const k = daneKey_(dane);
-  if (!k) return null;
-  // 1) Reservas (columna B = Slot, H = DANE). Nos quedamos con la última fila.
+  const out = [];
+  const reservadas = {};              // "JORNADA|CLASE" → true
+  if (!k) return out;
   try {
     const sheet = getSheet_();
     const lastRow = sheet.getLastRow();
     if (lastRow > 1) {
       const v = sheet.getRange(2, 1, lastRow - 1, HEADER.length).getValues();
-      let found = null;
       for (let i = 0; i < v.length; i++) {
-        if (!v[i][1]) continue;
-        if (daneKey_(v[i][7]) !== k) continue;
-        const slotRaw = v[i][1];
-        found = (Object.prototype.toString.call(slotRaw) === '[object Date]')
-          ? Utilities.formatDate(slotRaw, TIMEZONE, 'yyyy-MM-dd')
-          : String(slotRaw).trim().slice(0, 10);
+        if (!v[i][1]) continue;                       // sin slot no es reserva
+        if (daneKey_(v[i][7]) !== k) continue;        // col H = DANE
+        const raw = v[i][1];
+        const slot = (Object.prototype.toString.call(raw) === '[object Date]')
+          ? Utilities.formatDate(raw, TIMEZONE, 'yyyy-MM-dd HH:mm')
+          : normalizeSlotKey_(String(raw).trim());
+        const jornada = String(v[i][4] || '').trim();
+        const clase   = String(v[i][5] || '').trim();
+        reservadas[normJornada_(jornada) + '|' + claseKey_(clase)] = true;
+        out.push({ fecha: slot.slice(0, 10), hora: slot.slice(11, 16),
+                   jornada: jornada, clase: clase, tipo: 'reservada' });
       }
-      if (found) return { fecha: found, tipo: 'reservada' };
     }
   } catch (err) { /* si Reservas no existe seguimos con Asignaciones */ }
-  // 2) Asignaciones (fecha preasignada).
-  const asg = getAssignments_();
-  const keys = Object.keys(asg);
-  for (let i = 0; i < keys.length; i++) {
-    if (daneKey_(keys[i].split('|')[0]) === k) return { fecha: asg[keys[i]], tipo: 'asignada' };
+  const asg = getAssignmentsFull_();
+  for (let i = 0; i < asg.length; i++) {
+    const a = asg[i];
+    if (a.dane12 !== k || !a.fecha) continue;
+    if (reservadas[normJornada_(a.jornada) + '|' + claseKey_(a.clase)]) continue;  // ya reservó
+    out.push({ fecha: a.fecha, hora: '', jornada: a.jornada, clase: a.clase,
+               tipo: 'asignada' });
   }
-  return null;
+  out.sort(function (x, y) { return x.fecha < y.fecha ? -1 : (x.fecha > y.fecha ? 1 : 0); });
+  return out;
 }
 
 // dane es OPCIONAL: si no viene, lo deducimos del código (así el colegio solo
-// tiene que escribir 6 caracteres y no 14 dígitos).
+// escribe 6 caracteres y no 14 dígitos).
 function getRosterForSchool_(dane, code) {
   dane = normDane_(dane);
   code = String(code || '').trim().toUpperCase();
@@ -914,10 +964,10 @@ function getRosterForSchool_(dane, code) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(ROSTER_SHEET_NAME);
   if (!sheet || sheet.getLastRow() <= 1) return { ok: false, error: 'roster_no_cargado' };
-  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 6).getValues();
+  const nCols  = Math.min(Math.max(sheet.getLastColumn(), 6), 7);   // G = ClassID, si existe
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, nCols).getValues();
 
-  // Sin DANE: buscarlo por el código. Si el código apunta a más de una sede,
-  // pedimos el DANE para desambiguar.
+  // Sin DANE: buscarlo por el código. Si apunta a más de una sede, lo pedimos.
   if (!dane) {
     const danes = {};
     for (let i = 0; i < values.length; i++) {
@@ -930,13 +980,27 @@ function getRosterForSchool_(dane, code) {
   }
 
   const k = daneKey_(dane);
+  // Jornada por aula, desde Asignaciones: respaldo cuando el roster no trae ClassID.
+  const jornadaPorClase = {};
+  const asg = getAssignmentsFull_();
+  for (let i = 0; i < asg.length; i++) {
+    if (asg[i].dane12 === k) jornadaPorClase[claseKey_(asg[i].clase)] = normJornada_(asg[i].jornada);
+  }
+
   const rows = []; let colegio = ''; let hayColegio = false;
   for (let i = 0; i < values.length; i++) {
     if (daneKey_(values[i][0]) !== k) continue;
     hayColegio = true;
     if (String(values[i][1] || '').trim().toUpperCase() !== code) return { ok: false, error: 'codigo_invalido' };
+    const clase = String(values[i][4] || '');
+    // ClassID = "DANE-JORNADA-CLASE"; si está, es la fuente más directa.
+    let jornada = '';
+    const cid = nCols >= 7 ? String(values[i][6] || '') : '';
+    const partes = cid.split('-');
+    if (partes.length >= 3) jornada = normJornada_(partes[1]);
+    if (!jornada) jornada = jornadaPorClase[claseKey_(clase)] || '';
     rows.push({ id: String(values[i][2] || ''), nombre: String(values[i][3] || ''),
-                clase: String(values[i][4] || '') });
+                clase: clase, jornada: jornada });
     colegio = String(values[i][5] || '');
   }
   if (!hayColegio) return { ok: false, error: 'colegio_no_encontrado' };
@@ -945,24 +1009,26 @@ function getRosterForSchool_(dane, code) {
   const done = {}; let contacto = '', telefono = '';
   const cs = getConfirmSheet_(false);
   if (cs && cs.getLastRow() > 1) {
-    const nCol = Math.max(cs.getLastColumn(), CONFIRM_HEADER.length);
-    const cv = cs.getRange(2, 1, cs.getLastRow() - 1, nCol).getValues();
+    const nc = Math.max(cs.getLastColumn(), CONFIRM_HEADER.length);
+    const cv = cs.getRange(2, 1, cs.getLastRow() - 1, nc).getValues();
     for (let i = 0; i < cv.length; i++) {
       if (daneKey_(cv[i][1]) !== k) continue;
       done[String(cv[i][3])] = {
-        continua: String(cv[i][6] || ''), curso:   String(cv[i][7] || ''),
-        motivo:   String(cv[i][8] || ''), destino: String(cv[i][9] || ''),
-        nota:     String(cv[i][10] || '')
+        continua: String(cv[i][7]  || ''), curso:   String(cv[i][8]  || ''),
+        jornada:  String(cv[i][9]  || ''), motivo:  String(cv[i][10] || ''),
+        destino:  String(cv[i][11] || ''), nota:    String(cv[i][12] || '')
       };
-      contacto = String(cv[i][11] || contacto);
-      telefono = String(cv[i][12] || telefono);
+      contacto = String(cv[i][13] || contacto);
+      telefono = String(cv[i][14] || telefono);
     }
   }
 
-  const f = getFechaForDane_(dane);
+  const fechas = getFechasForDane_(dane);
   return { ok: true, dane: dane, colegio: colegio, estudiantes: rows,
            confirmados: done, contacto: contacto, telefono: telefono,
-           fecha: f ? f.fecha : null, fecha_tipo: f ? f.tipo : '' };
+           fechas: fechas,
+           fecha:      fechas.length ? fechas[0].fecha : null,
+           fecha_tipo: fechas.length ? fechas[0].tipo  : '' };
 }
 
 function confirmarLista_(body) {
@@ -992,14 +1058,19 @@ function confirmarLista_(body) {
     const id = String(it.id || '');
     if (!byId[id]) continue;                    // solo estudiantes de ese colegio
     const cont = (String(it.continua).toUpperCase() === 'SI') ? 'SI' : 'NO';
-    const curso   = cont === 'SI' ? String(it.curso   || '').trim().slice(0, 30) : '';
+    const curso   = cont === 'SI' ? String(it.curso || '').trim().slice(0, 30) : '';
+    let   jornada = cont === 'SI' ? normJornada_(it.jornada) : '';
+    if (cont === 'SI' && !jornada) jornada = byId[id].jornada || '';
     let   motivo  = cont === 'NO' ? String(it.motivo  || '').trim() : '';
     const destino = cont === 'NO' ? String(it.destino || '').trim().slice(0, 120) : '';
     const nota    = String(it.nota || '').trim().slice(0, 200);
     if (motivo && !MOTIVOS_OK[motivo]) motivo = 'no_sabemos';
     if (cont === 'SI') nSi++; else nNo++;
-    out.push([ts, daneReal, colegio, id, byId[id].nombre, byId[id].clase,
-              cont, curso, motivo, destino, nota, contacto, telefono, estado]);
+    out.push([ts, daneReal, colegio, id, byId[id].nombre,
+              byId[id].clase, byId[id].jornada,
+              cont, curso, jornada,
+              motivo, destino, nota,
+              contacto, telefono, estado]);
   }
   if (!out.length) return jsonOut_({ ok: false, error: 'sin_items_validos' });
 
@@ -1043,15 +1114,15 @@ function getEstadoConfirmaciones_() {
   const conf = {}, ult = {}, est = {};
   const cs = getConfirmSheet_(false);
   if (cs && cs.getLastRow() > 1) {
-    const nCol = Math.max(cs.getLastColumn(), CONFIRM_HEADER.length);
-    const cv = cs.getRange(2, 1, cs.getLastRow() - 1, nCol).getValues();
+    const nc = Math.max(cs.getLastColumn(), CONFIRM_HEADER.length);
+    const cv = cs.getRange(2, 1, cs.getLastRow() - 1, nc).getValues();
     for (let i = 0; i < cv.length; i++) {
       const k = daneKey_(cv[i][1]); if (!k) continue;
       if (!conf[k]) conf[k] = { marcados: 0, siguen: 0, salieron: 0 };
       conf[k].marcados++;
-      if (String(cv[i][6]) === 'SI') conf[k].siguen++; else conf[k].salieron++;
-      ult[k] = String(cv[i][0] || '');
-      est[k] = String(cv[i][13] || '');
+      if (String(cv[i][7]) === 'SI') conf[k].siguen++; else conf[k].salieron++;
+      ult[k] = String(cv[i][0]  || '');
+      est[k] = String(cv[i][15] || '');
     }
   }
   const out = [];

@@ -32,13 +32,13 @@ Diseñada para que un coordinador la termine en pocos minutos, desde el celular:
 
 | | |
 |---|---|
-| **Todos siguen en el colegio** | un botón marca de una vez a todos los no tocados y **propone el curso promovido** (0704 de 2025 → 0804 de 2026). El colegio solo corrige las excepciones |
+| **Curso y jornada** | por cada estudiante que sigue: el curso de 2026 (texto libre, con el curso promovido como pista en el placeholder) y un selector de **jornada** ya puesto en la de 2025, que el colegio cambia si hace falta |
 | **Guardar avance** | se puede enviar incompleto y seguir después con el mismo enlace |
 | **Autoguardado local** | lo marcado queda en `localStorage`; si cierran la página no se pierde |
 | **Reanudar** | al volver a entrar carga lo ya enviado al servidor y lo local (gana lo local) |
 | **Motivo de salida** | `otro_colegio` · `retiro` · `traslado_ciudad` · `nunca_estuvo` · `no_sabemos`, más el colegio o ciudad destino en texto libre |
 | **Buscador y filtros** | Todos / Sin marcar / Siguen / Ya no están |
-| **Fecha de la visita** | muestra la reserva (o la fecha preasignada); si no hay ninguna, enlaza a `index.html` para reservar |
+| **Fecha de la visita** | una línea por aula, con la **reserva real** si existe y la fecha preasignada si no. Sale de las mismas pestañas `Reservas`/`Asignaciones` que usa `index.html`, así que no puede desincronizarse. Siempre enlaza al aplicativo de reservas |
 | **Recibo** | resumen imprimible al terminar |
 | Celular | tarjetas, no tabla; barra fija con el progreso |
 
@@ -49,13 +49,16 @@ pestaña privada `RosterEstudiantes` y el backend solo los entrega con el códig
 
 `ConfirmacionesLista` — **una fila por estudiante, siempre el estado actual** (cada envío del
 colegio reemplaza sus filas anteriores):
-`Timestamp · DANE · Colegio · RowID · Nombre · ClaseOriginal · Continua · CursoActual · Motivo · ColegioDestino · Nota · Contacto · Telefono · Estado`
+`Timestamp · DANE · Colegio · RowID · Nombre · ClaseOriginal · JornadaOriginal · Continua · CursoActual · JornadaActual · Motivo · ColegioDestino · Nota · Contacto · Telefono · Estado`
 
 `ConfirmacionesLog` — una fila por envío, nunca se borra:
 `Timestamp · DANE · Colegio · Contacto · Telefono · Estado · N_estudiantes · N_siguen · N_salieron`
 
 > La versión anterior tenía 9 columnas y añadía filas. Al pegar el `apps-script.gs` nuevo el
 > encabezado se amplía solo; las filas viejas quedan con las columnas nuevas vacías.
+
+**Esta página nunca escribe en `Reservas`.** Solo la lee, para decirle al colegio cuándo es su
+visita. El agendamiento se sigue haciendo únicamente desde `index.html`.
 
 ### Monitoreo del avance
 

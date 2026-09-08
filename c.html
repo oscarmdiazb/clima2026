@@ -36,6 +36,18 @@ button:disabled{opacity:.45;cursor:default}
 button.sec{background:var(--blanco);color:var(--verde);border:1px solid var(--verde)}
 button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 
+/* ---- ayuda: pedir el codigo por WhatsApp ---- */
+.wa-help{margin-top:18px;padding:14px 16px;background:var(--verde-cl);
+  border:1px solid #6ee7b7;border-radius:10px}
+.wa-help-title{margin:0 0 2px;font-weight:800;color:var(--verde);font-size:.95rem}
+.wa-help-sub{margin:0 0 10px;color:#065f46;font-size:.88rem;line-height:1.45}
+.wa-btn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#0b2e1c;
+  text-decoration:none;border-radius:9px;padding:11px 16px;font-weight:800;font-size:.95rem}
+.wa-btn:hover{background:#1ebe5b}
+.wa-btn .wa-ico{font-size:1.1rem}
+.wa-help .footer-note{margin-top:10px}
+@media (max-width:520px){ .wa-btn{display:flex;justify-content:center} }
+
 .msg{padding:12px 14px;border-radius:8px;margin:12px 0;font-size:.95rem;display:none}
 .msg.err{display:block;background:var(--rojo-cl);color:var(--rojo)}
 .msg.ok{display:block;background:var(--verde-cl);color:var(--verde)}
@@ -73,10 +85,8 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 .detalle .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .detalle .row > *{flex:1 1 180px;min-width:0}
 .detalle .lbl{flex:0 0 100%;font-size:.82rem;font-weight:700;color:var(--mut);margin-bottom:3px}
-.curso-in{max-width:150px;flex:0 0 150px !important}
-.sug{display:flex;gap:5px;flex-wrap:wrap;flex:1 1 auto}
-.sug button{background:var(--blanco);color:var(--verde);border:1px dashed var(--verde);
-  font-weight:700;padding:8px 12px;font-size:.85rem;border-radius:7px}
+.curso-in{max-width:170px;flex:0 0 170px !important}
+.jornada-in{max-width:210px;flex:0 0 210px !important}
 
 /* ---- barra fija inferior ---- */
 .footbar{position:fixed;left:0;right:0;bottom:0;background:var(--blanco);
@@ -105,7 +115,7 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   .card{padding:14px 12px}
   .sino{width:100%}
   .sino button{flex:1}
-  .curso-in{flex:1 1 100% !important;max-width:none}
+  .curso-in,.jornada-in{flex:1 1 100% !important;max-width:none}
   .footbar .in{padding:8px 10px;gap:8px}
   .bar{flex:1 1 100%}
   #btnGuardar,#btnSend{flex:1 1 0;padding:11px 8px;font-size:.92rem}
@@ -136,7 +146,14 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   </div>
   <div class="msg err" id="loginErr"></div>
   <p style="margin-top:16px"><button id="btnLoad">Ver la lista de mi colegio</button></p>
-  <p class="footer-note">¿Perdió el código? Responda el correo de invitación y se lo reenviamos.</p>
+  <div class="wa-help">
+    <p class="wa-help-title">¿No tiene el código o lo perdió?</p>
+    <p class="wa-help-sub">Escríbanos por WhatsApp y se lo enviamos de una vez. El mensaje ya va escrito: solo complete el nombre del colegio y envíelo.</p>
+    <a class="wa-btn" href="https://wa.me/573019597822?text=Hola%2C%20escribo%20desde%20el%20colegio%20____________%20%28jornada%20______%29.%20No%20tengo%20el%20codigo%20de%20acceso%20para%20ver%20y%20confirmar%20la%20lista%20de%20estudiantes%20de%20la%20Encuesta%20de%20Clima%20de%20Aula%202026.%20%C2%BFMe%20lo%20pueden%20enviar%2C%20por%20favor%3F" target="_blank" rel="noopener">
+      <span class="wa-ico" aria-hidden="true">💬</span> Pedir el código por WhatsApp
+    </a>
+    <p class="footer-note">También puede responder el correo de invitación y se lo reenviamos.</p>
+  </div>
 </div>
 
 <!-- ============ 2. LISTA ============ -->
@@ -146,19 +163,16 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   <div class="fecha-box hidden" id="fechaBox"></div>
 
   <ol class="pasos">
-    <li>Si <b>casi todos siguen</b>, use el botón verde y luego corrija solo las excepciones.</li>
-    <li>Para cada estudiante marque <b>Sigue</b> o <b>Ya no está</b>.</li>
-    <li>Si sigue, escriba el <b>curso de 2026</b>. Si ya no está, díganos <b>a dónde se fue</b>.</li>
+    <li>Para cada estudiante marque <b>Sigue</b> o <b>Ya no está en el colegio</b>.</li>
+    <li>Si sigue, escriba el <b>curso</b> y confirme la <b>jornada</b> de 2026.</li>
+    <li>Si ya no está, díganos <b>qué pasó</b> y, si lo saben, <b>a dónde se fue</b>.</li>
   </ol>
 
   <div class="msg warn" id="resumeMsg"></div>
 
   <div class="tools">
-    <button class="mini" id="btnTodosSiguen">✓ Todos siguen en el colegio</button>
-    <button class="mini sec" id="btnLimpiar">Borrar todo lo marcado</button>
-  </div>
-  <div class="tools">
     <input type="text" id="inpBuscar" placeholder="Buscar un estudiante por nombre…" autocomplete="off">
+    <button class="mini sec" id="btnLimpiar">Borrar todo lo marcado</button>
   </div>
   <div class="chips" id="filtros">
     <button class="chip on" data-f="todos">Todos</button>
@@ -225,6 +239,14 @@ const esc = s => String(s == null ? "" : s)
   .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
   .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 
+const JORNADAS = [
+  ["",        "— jornada —"],
+  ["MAÑANA",  "Jornada mañana"],
+  ["TARDE",   "Jornada tarde"],
+  ["ÚNICA",   "Jornada única"],
+  ["COMPLETA","Jornada completa"]
+];
+
 const MOTIVOS = [
   ["", "— seleccione —"],
   ["otro_colegio",   "Se cambió a otro colegio"],
@@ -234,8 +256,10 @@ const MOTIVOS = [
   ["no_sabemos",     "No sabemos qué pasó"]
 ];
 
+const URL_RESERVAS = "./";   // index.html del mismo sitio: el aplicativo de reservas
+
 let ESTADO = {
-  dane: "", code: "", colegio: "", fecha: null, fechaTipo: "",
+  dane: "", code: "", colegio: "", fecha: null, fechaTipo: "", fechas: [],
   alumnos: [],            // [{id, nombre, clase}]
   marca: {},              // id → {continua:'SI'|'NO', curso, motivo, destino, nota}
   filtro: "todos", buscar: "", enviado: false
@@ -292,8 +316,9 @@ async function cargar(code, dane){
     ESTADO.dane      = String(data.dane || dane || "");
     ESTADO.code      = code;
     ESTADO.colegio   = data.colegio || "";
-    ESTADO.fecha     = data.fecha || null;
-    ESTADO.fechaTipo = data.fecha_tipo || "";
+    ESTADO.fechas    = Array.isArray(data.fechas) ? data.fechas : [];
+    ESTADO.fecha     = data.fecha || (ESTADO.fechas[0] ? ESTADO.fechas[0].fecha : null);
+    ESTADO.fechaTipo = data.fecha_tipo || (ESTADO.fechas[0] ? ESTADO.fechas[0].tipo : "");
     ESTADO.alumnos   = data.estudiantes || [];
     ESTADO.marca     = {};
 
@@ -302,7 +327,8 @@ async function cargar(code, dane){
     Object.keys(previo).forEach(id => {
       const p = previo[id];
       ESTADO.marca[id] = { continua: p.continua === "SI" ? "SI" : "NO",
-        curso: p.curso || "", motivo: p.motivo || "", destino: p.destino || "", nota: p.nota || "" };
+        curso: p.curso || "", jornada: p.jornada || "", motivo: p.motivo || "",
+        destino: p.destino || "", nota: p.nota || "" };
     });
     const loc = leerLocal();
     if(loc && loc.marca) Object.keys(loc.marca).forEach(id => { ESTADO.marca[id] = loc.marca[id]; });
@@ -347,21 +373,37 @@ function fechaBonita(iso){
   return dias[d.getDay()] + " " + (+p[2]) + " de " + meses[+p[1]-1] + " de " + p[0];
 }
 
+// Una línea por aula. Muestra la reserva real si existe; si no, la fecha
+// sugerida. El dato sale del mismo aplicativo de reservas (pestaña Reservas,
+// y como respaldo Asignaciones), así que no puede desincronizarse.
+function lineaFecha(f){
+  const aula = [f.clase ? "curso " + f.clase : "",
+                f.jornada ? "jornada " + f.jornada.toLowerCase() : ""].filter(Boolean).join(", ");
+  return "<div style='margin-top:4px'>\uD83D\uDCC5&nbsp;<b>" + esc(fechaBonita(f.fecha)) + "</b>" +
+    (f.hora ? " a las " + esc(f.hora) : "") +
+    (aula ? " <span style='font-weight:400'>· " + esc(aula) + "</span>" : "") +
+    " <span style='font-weight:400'>(" +
+      (f.tipo === "reservada" ? "ya reservada" : "fecha sugerida, sin reservar") +
+    ")</span></div>";
+}
+
 function pintarCabecera(){
   $("colegioName").textContent = ESTADO.colegio;
   $("listMeta").textContent = ESTADO.alumnos.length + " estudiantes en la lista de 2025.";
   const fb = $("fechaBox");
   fb.classList.remove("hidden","si","no");
-  if(ESTADO.fecha){
-    fb.classList.add("si");
-    fb.innerHTML = "\uD83D\uDCC5&nbsp;Visita de la encuesta: <b>" + esc(fechaBonita(ESTADO.fecha)) + "</b>" +
-      (ESTADO.fechaTipo === "asignada"
-        ? " <span style='font-weight:400'>(fecha sugerida — puede cambiarla en el aplicativo de reservas)</span>"
-        : " <span style='font-weight:400'>(ya reservada)</span>");
+  const hayReserva = ESTADO.fechas.some(f => f.tipo === "reservada");
+  const enlace = "<div style='margin-top:8px'><a href='" + URL_RESERVAS +
+    "' style='color:inherit;font-weight:700'>" +
+    (hayReserva ? "Ver o cambiar la fecha en el aplicativo de reservas →"
+                : "Reservar la fecha en el aplicativo de reservas →") + "</a></div>";
+  if(ESTADO.fechas.length){
+    fb.classList.add(hayReserva ? "si" : "no");
+    fb.innerHTML = "<b>Visita de la encuesta</b>" +
+      ESTADO.fechas.map(lineaFecha).join("") + enlace;
   }else{
     fb.classList.add("no");
-    fb.innerHTML = "\u26A0\uFE0F&nbsp;Su colegio todavía <b>no tiene fecha de visita</b>. " +
-      "<a href='./' style='color:inherit;font-weight:700'>Reservar la fecha aquí →</a>";
+    fb.innerHTML = "\u26A0\uFE0F&nbsp;Su colegio todavía <b>no tiene fecha de visita</b>." + enlace;
   }
 }
 
@@ -414,20 +456,21 @@ function fila(a, num){
   let html = '<div class="alum-top">' +
     '<div class="alum-id">' + num + '</div>' +
     '<div class="alum-nom">' + esc(a.nombre) +
-      '<small>Curso en 2025: ' + esc(a.clase || "—") + '</small></div>' +
+      '<small>En 2025: curso ' + esc(a.clase || "—") +
+      (a.jornada ? " · jornada " + esc(a.jornada.toLowerCase()) : "") + '</small></div>' +
     '<div class="sino">' +
       '<button type="button" data-v="SI" class="' + (m && m.continua === "SI" ? "on-si" : "") + '">Sigue</button>' +
-      '<button type="button" data-v="NO" class="' + (m && m.continua === "NO" ? "on-no" : "") + '">Ya no está</button>' +
+      '<button type="button" data-v="NO" class="' + (m && m.continua === "NO" ? "on-no" : "") + '">Ya no está en el colegio</button>' +
     '</div></div>';
 
   if(m && m.continua === "SI"){
     html += '<div class="detalle"><div class="row">' +
-      '<div class="lbl">¿En qué curso está en 2026?</div>' +
-      '<input type="text" class="curso-in" list="cursosSug" placeholder="p. ej. ' + esc(sug || "802") + '" value="' + esc(m.curso || "") + '">' +
-      '<div class="sug">' +
-        (sug ? '<button type="button" data-curso="' + esc(sug) + '">' + esc(sug) + '</button>' : "") +
-        '<button type="button" data-curso="__mismo__">Mismo curso (repitió)</button>' +
-      '</div></div></div>';
+      '<div class="lbl">¿En qué curso y jornada está en 2026?</div>' +
+      '<input type="text" class="curso-in" list="cursosSug" placeholder="Curso, p. ej. ' + esc(sug || "802") + '" value="' + esc(m.curso || "") + '">' +
+      '<select class="jornada-in">' +
+        JORNADAS.map(j => '<option value="' + j[0] + '"' + (m.jornada === j[0] ? " selected" : "") + '>' + esc(j[1]) + '</option>').join("") +
+      '</select>' +
+    '</div></div>';
   }
   if(m && m.continua === "NO"){
     html += '<div class="detalle"><div class="row">' +
@@ -447,7 +490,8 @@ function fila(a, num){
     else{
       ESTADO.marca[a.id] = {
         continua: v,
-        curso:   v === "SI" ? ((cur && cur.curso) || cursoPromovido(a.clase) || "") : "",
+        curso:   v === "SI" ? ((cur && cur.curso) || "") : "",
+        jornada: v === "SI" ? ((cur && cur.jornada) || a.jornada || "") : "",
         motivo:  v === "NO" ? ((cur && cur.motivo)  || "") : "",
         destino: v === "NO" ? ((cur && cur.destino) || "") : "",
         nota: ""
@@ -460,12 +504,10 @@ function fila(a, num){
   if(ci) ci.addEventListener("input", () => {
     ESTADO.marca[a.id].curso = ci.value.trim(); guardarLocal(); progreso();
   });
-  div.querySelectorAll(".sug button").forEach(b => b.addEventListener("click", () => {
-    const val = b.dataset.curso === "__mismo__" ? (a.clase || "") : b.dataset.curso;
-    ESTADO.marca[a.id].curso = val;
-    if(ci) ci.value = val;
-    guardarLocal(); pintarSugerencias(); progreso();
-  }));
+  const ji = div.querySelector(".jornada-in");
+  if(ji) ji.addEventListener("change", () => {
+    ESTADO.marca[a.id].jornada = ji.value; guardarLocal(); progreso();
+  });
   const mi = div.querySelector(".motivo-in");
   if(mi) mi.addEventListener("change", () => {
     ESTADO.marca[a.id].motivo = mi.value; guardarLocal(); progreso();
@@ -491,26 +533,29 @@ function repintarFila(id){
 
 /* ================= PROGRESO ================= */
 function faltantes(){
-  const sinMarcar = [], sinCurso = [], sinMotivo = [];
+  const sinMarcar = [], sinCurso = [], sinJornada = [], sinMotivo = [];
   ESTADO.alumnos.forEach(a => {
     const m = ESTADO.marca[a.id];
     if(!m){ sinMarcar.push(a); return; }
     if(m.continua === "SI" && !String(m.curso || "").trim()) sinCurso.push(a);
+    if(m.continua === "SI" && !m.jornada) sinJornada.push(a);
     if(m.continua === "NO" && !m.motivo) sinMotivo.push(a);
   });
-  return { sinMarcar, sinCurso, sinMotivo };
+  return { sinMarcar, sinCurso, sinJornada, sinMotivo };
 }
 function progreso(){
   const tot = ESTADO.alumnos.length;
   const f   = faltantes();
   const listos = tot - f.sinMarcar.length;
   $("barFill").style.width = tot ? Math.round(100 * listos / tot) + "%" : "0%";
-  if(f.sinMarcar.length === 0 && f.sinCurso.length === 0 && f.sinMotivo.length === 0){
+  if(f.sinMarcar.length === 0 && f.sinCurso.length === 0 &&
+     f.sinJornada.length === 0 && f.sinMotivo.length === 0){
     $("barTxt").innerHTML = "<b>✓ Listo:</b> los " + tot + " estudiantes están marcados.";
   }else{
     const p = [];
     if(f.sinMarcar.length) p.push("faltan <b>" + f.sinMarcar.length + "</b> por marcar");
     if(f.sinCurso.length)  p.push("<b>" + f.sinCurso.length + "</b> sin curso 2026");
+    if(f.sinJornada.length)p.push("<b>" + f.sinJornada.length + "</b> sin jornada");
     if(f.sinMotivo.length) p.push("<b>" + f.sinMotivo.length + "</b> sin motivo");
     $("barTxt").innerHTML = listos + " de " + tot + " — <span class='pending'>" + p.join(" · ") + "</span>";
   }
@@ -523,7 +568,8 @@ function recolectar(){
     const m = ESTADO.marca[a.id];
     if(!m) return;
     out.push({ id: a.id, continua: m.continua, curso: m.curso || "",
-               motivo: m.motivo || "", destino: m.destino || "", nota: m.nota || "" });
+               jornada: m.jornada || "", motivo: m.motivo || "",
+               destino: m.destino || "", nota: m.nota || "" });
   });
   return out;
 }
@@ -550,8 +596,13 @@ async function enviar(estado){
       $("sendErr").style.display = "block";
       ESTADO.filtro = "si"; sincronizarChips(); pintar(); return;
     }
+    if(f.sinJornada.length){
+      $("sendErr").innerHTML = "Hay <b>" + f.sinJornada.length + "</b> estudiante(s) marcados <b>Sigue</b> sin jornada.";
+      $("sendErr").style.display = "block";
+      ESTADO.filtro = "si"; sincronizarChips(); pintar(); return;
+    }
     if(f.sinMotivo.length){
-      $("sendErr").innerHTML = "Hay <b>" + f.sinMotivo.length + "</b> estudiante(s) marcados <b>Ya no está</b> sin decir qué pasó.";
+      $("sendErr").innerHTML = "Hay <b>" + f.sinMotivo.length + "</b> estudiante(s) marcados <b>Ya no está en el colegio</b> sin decir qué pasó.";
       $("sendErr").style.display = "block";
       ESTADO.filtro = "no"; sincronizarChips(); pintar(); return;
     }
@@ -604,14 +655,19 @@ function mostrarRecibo(n){
     "<tr><td>Ya no están</td><td>" + salio + "</td></tr>" +
     "<tr><td>Total de la lista</td><td>" + ESTADO.alumnos.length + "</td></tr>";
   const rf = $("reciboFecha");
-  if(ESTADO.fecha){
-    rf.classList.remove("hidden"); rf.classList.add("si");
-    rf.innerHTML = "\uD83D\uDCC5&nbsp;Recuerde: la visita es el <b>" + esc(fechaBonita(ESTADO.fecha)) +
-      "</b>. Los estudiantes de la lista deben estar avisados ese día.";
+  const hayReserva = ESTADO.fechas.some(f => f.tipo === "reservada");
+  rf.classList.remove("hidden","si","no");
+  if(ESTADO.fechas.length){
+    rf.classList.add(hayReserva ? "si" : "no");
+    rf.innerHTML = "<b>Recuerde la visita</b>" + ESTADO.fechas.map(lineaFecha).join("") +
+      "<div style='margin-top:6px;font-weight:400'>Los estudiantes de la lista deben estar avisados ese día.</div>" +
+      "<div style='margin-top:8px'><a href='" + URL_RESERVAS + "' style='color:inherit;font-weight:700'>" +
+      (hayReserva ? "Ver o cambiar la fecha en el aplicativo de reservas →"
+                  : "Reservar la fecha en el aplicativo de reservas →") + "</a></div>";
   }else{
-    rf.classList.remove("hidden"); rf.classList.add("no");
+    rf.classList.add("no");
     rf.innerHTML = "\u26A0\uFE0F&nbsp;Falta reservar la fecha de la visita. " +
-      "<a href='./' style='color:inherit;font-weight:700'>Reservarla aquí →</a>";
+      "<a href='" + URL_RESERVAS + "' style='color:inherit;font-weight:700'>Reservarla aquí →</a>";
   }
   ESTADO.enviado = true;
   $("listCard").classList.add("hidden");
@@ -631,15 +687,6 @@ document.querySelectorAll("#filtros .chip").forEach(c => c.addEventListener("cli
 }));
 $("inpBuscar").addEventListener("input", e => { ESTADO.buscar = e.target.value.trim(); pintar(); });
 
-$("btnTodosSiguen").addEventListener("click", () => {
-  const yaHay = Object.keys(ESTADO.marca).length;
-  if(yaHay && !confirm("Se marcarán como 'Sigue' los estudiantes que aún no ha tocado. ¿Continuar?")) return;
-  ESTADO.alumnos.forEach(a => {
-    if(ESTADO.marca[a.id]) return;
-    ESTADO.marca[a.id] = { continua:"SI", curso: cursoPromovido(a.clase) || "", motivo:"", destino:"", nota:"" };
-  });
-  guardarLocal(); pintarSugerencias(); pintar();
-});
 $("btnLimpiar").addEventListener("click", () => {
   if(!confirm("Se borrará todo lo que ha marcado en esta pantalla. ¿Continuar?")) return;
   ESTADO.marca = {}; guardarLocal(); pintar();
