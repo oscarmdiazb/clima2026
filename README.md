@@ -79,6 +79,18 @@ por `Código` y si falta por **nombre**, y acepta `.xlsx`, `.xls` y `.csv`. Lo q
 **reporta en pantalla** (filas sin responder, estudiantes que no están en la lista) en vez de
 tragárselo en silencio.
 
+### La lista para el día de la visita
+
+Botón **«Descargar la lista para el día de la visita»** — en el recibo, y en la barra de
+herramientas apenas hay un estudiante marcado. Es lo que el colegio necesita para **ir a
+buscar a los estudiantes**: quién sale de clase y de qué salón.
+
+`Para la visita` va **ordenada por el curso de 2026**, no por el de 2025, con una línea en
+blanco entre cursos para recorrer salón por salón, y con las columnas *Presente (marque X)* y
+*Observaciones* vacías para escribir a mano. Encabezado con el colegio, el día y la hora de la
+visita y el total que participa. Se añaden `Ya no están` (con motivo y destino) y
+`Faltan por responder` solo si hay filas que poner en ellas.
+
 ### Pestañas que escribe el backend
 
 `ConfirmacionesLista` — **una fila por estudiante, siempre el estado actual** (cada envío del

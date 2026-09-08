@@ -131,7 +131,7 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   #btnGuardar,#btnSend{flex:1 1 0;padding:11px 8px;font-size:.92rem}
 }
 @media print{
-  .footbar,.tools,.chips,#btnPrint,#btnVolver{display:none !important}
+  .footbar,.tools,.chips,#btnPrint,#btnVolver,#btnPlanRecibo{display:none !important}
 }
 </style>
 </head>
@@ -193,6 +193,7 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 
   <div class="tools">
     <input type="text" id="inpBuscar" placeholder="Buscar un estudiante por nombre…" autocomplete="off">
+    <button class="mini sec hidden" id="btnPlan">Descargar la lista para el día de la visita</button>
     <button class="mini sec" id="btnLimpiar">Borrar todo lo marcado</button>
   </div>
   <div class="chips" id="filtros">
@@ -228,8 +229,14 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   <p class="sub" id="reciboSub"></p>
   <table id="reciboTabla"></table>
   <div class="fecha-box hidden" id="reciboFecha" style="margin-top:14px"></div>
-  <p style="margin-top:18px">
-    <button id="btnPrint">Imprimir o guardar en PDF</button>
+  <p class="sub" style="margin-top:16px">Descargue esta lista y entréguesela a quien vaya a
+     reunir a los estudiantes: viene <b>ordenada por el curso de 2026</b>, para poder ir salón
+     por salón.</p>
+  <p style="margin-top:12px">
+    <button id="btnPlanRecibo">Descargar la lista para el día de la visita</button>
+  </p>
+  <p style="margin-top:6px">
+    <button class="sec" id="btnPrint">Imprimir o guardar en PDF</button>
     <button class="sec" id="btnVolver" style="margin-left:8px">Volver a la lista</button>
   </p>
 </div>
@@ -571,6 +578,7 @@ function progreso(){
   const tot = ESTADO.alumnos.length;
   const f   = faltantes();
   const listos = tot - f.sinMarcar.length;
+  $("btnPlan").classList.toggle("hidden", listos === 0);
   $("barFill").style.width = tot ? Math.round(100 * listos / tot) + "%" : "0%";
   if(f.sinMarcar.length === 0 && f.sinCurso.length === 0 &&
      f.sinJornada.length === 0 && f.sinMotivo.length === 0){
@@ -917,6 +925,101 @@ $("inpExcel").addEventListener("change", e => {
   if(f) subirExcel(f);
   e.target.value = "";           // permite volver a subir el mismo archivo
 });
+
+
+/* ---------- la lista para el día de la visita ---------- */
+// Lo que el colegio necesita el día de la aplicación: a quién hay que sacar de
+// clase y de qué salón. Va ordenada por el curso de 2026 para poder recorrer
+// salón por salón, no por el curso viejo.
+function ordenCurso(c){
+  const t = String(c || "").trim().toUpperCase();
+  const m = t.match(/(\d{1,2})\D*(\d{1,2})?$/);
+  if(!m) return [99, 99, t];
+  return [parseInt(m[1], 10), m[2] ? parseInt(m[2], 10) : 0, t];
+}
+function compararCurso(a, b){
+  const x = ordenCurso(a.curso), y = ordenCurso(b.curso);
+  for(let i = 0; i < 3; i++){ if(x[i] < y[i]) return -1; if(x[i] > y[i]) return 1; }
+  return a.nombre.localeCompare(b.nombre, "es");
+}
+
+async function descargarPlanVisita(boton){
+  const antes = boton ? boton.textContent : "";
+  if(boton){ boton.disabled = true; boton.textContent = "Preparando…"; }
+  try{
+    const XLSX = await cargarSheetJS();
+    const siguen = [], salieron = [], sinMarcar = [];
+    ESTADO.alumnos.forEach(a => {
+      const m = ESTADO.marca[a.id];
+      if(!m){ sinMarcar.push({ nombre:a.nombre, clase:a.clase, jornada:a.jornada }); return; }
+      if(m.continua === "SI"){
+        siguen.push({ nombre:a.nombre, clase:a.clase,
+                      curso:m.curso || "", jornada:m.jornada || a.jornada || "" });
+      }else{
+        salieron.push({ nombre:a.nombre, clase:a.clase,
+          motivo:(MOTIVOS.find(x => x[0] === m.motivo) || ["",""])[1],
+          destino:m.destino || "" });
+      }
+    });
+    siguen.sort(compararCurso);
+
+    const cita = ESTADO.fechas.length
+      ? fechaBonita(ESTADO.fechas[0].fecha) + (ESTADO.fechas[0].hora ? " a las " + ESTADO.fechas[0].hora : "")
+      : "por reservar";
+    const cab = [
+      ["Encuesta de Clima de Aula 2026 — estudiantes que participan"],
+      [ESTADO.colegio],
+      ["Día de la visita:", cita],
+      ["Total que participan:", String(siguen.length)],
+      [""],
+      ["Curso 2026", "Jornada 2026", "Estudiante", "Curso 2025", "Presente (marque X)", "Observaciones"]
+    ];
+    let ult = null;
+    siguen.forEach(e => {
+      const clave = e.curso + "|" + e.jornada;
+      if(ult !== null && clave !== ult) cab.push(["", "", "", "", "", ""]);  // aire entre cursos
+      ult = clave;
+      cab.push([e.curso || "(sin curso)", e.jornada || "", e.nombre, e.clase || "", "", ""]);
+    });
+    const h1 = XLSX.utils.aoa_to_sheet(cab);
+    h1["!cols"] = [{wch:12},{wch:14},{wch:40},{wch:11},{wch:20},{wch:30}];
+    h1["!freeze"] = { xSplit:0, ySplit:6 };
+    for(let r = 6; r < cab.length; r++){
+      [0, 3].forEach(c => {
+        const ref = XLSX.utils.encode_cell({ r:r, c:c });
+        if(h1[ref]){ h1[ref].t = "s"; h1[ref].z = "@"; }
+      });
+    }
+
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, h1, "Para la visita");
+
+    if(salieron.length){
+      const a2 = [["Estudiantes que ya no están en el colegio"], [ESTADO.colegio], [""],
+                  ["Estudiante", "Curso 2025", "¿Qué pasó?", "¿A dónde se fue?"]];
+      salieron.forEach(e => a2.push([e.nombre, e.clase || "", e.motivo, e.destino]));
+      const h2 = XLSX.utils.aoa_to_sheet(a2);
+      h2["!cols"] = [{wch:40},{wch:11},{wch:34},{wch:34}];
+      XLSX.utils.book_append_sheet(libro, h2, "Ya no están");
+    }
+    if(sinMarcar.length){
+      const a3 = [["Estudiantes que faltan por responder"], [ESTADO.colegio], [""],
+                  ["Estudiante", "Curso 2025", "Jornada 2025"]];
+      sinMarcar.forEach(e => a3.push([e.nombre, e.clase || "", e.jornada || ""]));
+      const h3 = XLSX.utils.aoa_to_sheet(a3);
+      h3["!cols"] = [{wch:40},{wch:11},{wch:13}];
+      XLSX.utils.book_append_sheet(libro, h3, "Faltan por responder");
+    }
+
+    const limpio = ESTADO.colegio.replace(/[\\\/:*?"<>|]/g, "").slice(0, 60).trim();
+    XLSX.writeFile(libro, "Estudiantes para la visita - " + limpio + ".xlsx");
+  }catch(e){
+    alert("No pudimos preparar el archivo: " + (e.message || e));
+  }finally{ if(boton){ boton.disabled = false; boton.textContent = antes; } }
+}
+
+$("btnPlan").addEventListener("click", e => descargarPlanVisita(e.target));
+$("btnPlanRecibo").addEventListener("click", e => descargarPlanVisita(e.target));
 
 /* ================= EVENTOS ================= */
 function sincronizarChips(){
