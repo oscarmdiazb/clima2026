@@ -747,6 +747,193 @@
   .how-text strong { color: var(--text); font-weight: 800; }
   .how-text em { font-style: normal; color: var(--primary); font-weight: 700; }
 
+  .step-hint {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    background: var(--bg);
+    border-left: 3px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 12px;
+    margin: 0 0 16px;
+  }
+  .step-hint strong { color: #92400e; font-weight: 800; }
+
+  /* ----- Key alert: quiénes son los encuestados ----- */
+  .key-alert {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: #fffbeb;
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 20px 0 16px;
+    box-shadow: var(--shadow);
+  }
+  .key-alert-icon { font-size: 26px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+  .key-alert-body { flex: 1; min-width: 0; }
+  .key-alert h2 {
+    font-size: 17px;
+    font-weight: 800;
+    color: #78350f;
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+  .key-alert p {
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: #713f12;
+    margin: 0 0 8px;
+  }
+  .key-alert p:last-of-type { margin-bottom: 12px; }
+  .key-alert strong { font-weight: 800; color: #78350f; }
+  .key-alert-btn {
+    background: #b45309;
+    color: #fff;
+    border: 0;
+    border-radius: 9px;
+    padding: 12px 18px;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 800;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+  }
+  .key-alert-btn:hover { background: #92400e; }
+  .key-alert-btn:active { transform: scale(0.99); }
+  @media (min-width: 640px) { .key-alert-btn { width: auto; } }
+
+  /* ----- Instrucciones (modal) ----- */
+  .instr-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 300;
+    padding: 20px 14px;
+    overflow-y: auto;
+    animation: cm-fade 0.2s ease-out;
+  }
+  .instr-backdrop[hidden] { display: none !important; }
+  .instr-modal {
+    background: var(--card);
+    border-radius: 14px;
+    max-width: 720px;
+    width: 100%;
+    box-shadow: 0 25px 60px -10px rgba(0,0,0,0.35);
+    margin: auto;
+    animation: cm-pop 0.22s ease-out;
+  }
+  .instr-head {
+    position: sticky;
+    top: 0;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+    padding: 18px 22px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    z-index: 2;
+  }
+  .instr-head h2 {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.3;
+  }
+  .instr-head .instr-sub {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .instr-x {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 34px; height: 34px;
+    font-size: 19px;
+    line-height: 1;
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .instr-x:hover { background: #e5e7eb; }
+  .instr-body { padding: 6px 22px 20px; }
+  .instr-sec { padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .instr-sec:last-child { border-bottom: 0; }
+  .instr-sec h3 {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 8px;
+  }
+  .instr-sec p, .instr-sec li {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #374151;
+  }
+  .instr-sec p { margin: 0 0 8px; }
+  .instr-sec p:last-child { margin-bottom: 0; }
+  .instr-sec ul, .instr-sec ol { margin: 0 0 4px; padding-left: 20px; }
+  .instr-sec li { margin-bottom: 8px; }
+  .instr-sec strong { font-weight: 800; color: var(--text); }
+  .instr-callout {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    margin: 4px 0 10px;
+  }
+  .instr-callout p { color: #713f12; margin: 0; }
+  .instr-callout strong { color: #78350f; }
+  .instr-good {
+    background: #ecfdf5;
+    border-left: 4px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    margin: 4px 0 10px;
+  }
+  .instr-good p { color: #065f46; margin: 0; }
+  .instr-good strong { color: #064e3b; }
+  .instr-btn {
+    display: inline-block;
+    background: var(--primary);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 13.5px;
+    font-weight: 800;
+    margin-top: 4px;
+  }
+  .instr-btn:hover { background: var(--primary-hover); }
+  .instr-foot {
+    position: sticky;
+    bottom: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 14px 14px;
+    padding: 14px 22px;
+    text-align: right;
+  }
+  @media print {
+    .instr-backdrop { position: static; background: #fff; overflow: visible; padding: 0; }
+    .instr-modal { box-shadow: none; max-width: none; }
+    .instr-head, .instr-foot { position: static; }
+    .instr-x, .instr-foot { display: none; }
+  }
+
   /* ----- Confirmation modal (post-reservation) ----- */
   .confirm-modal-backdrop {
     position: fixed;
@@ -1547,21 +1734,31 @@
   <header>
     <div class="brand">OCE-SED · Encuesta de clima de aula · Reservas 2026 R12</div>
     <h1>Reserva el horario de la visita de seguimiento — Encuesta de Clima de Aula 2026</h1>
-    <p class="lead">A cada aula se le asignó un día por logística. Solo necesitas elegir la hora.</p>
+    <p class="lead">La encuesta se aplica a <strong>los mismos estudiantes que participaron en 2025</strong> — la lista nominal que enviamos al correo del colegio. A cada grupo se le asignó un día por logística: aquí solo eliges la hora.</p>
   </header>
+
+  <section class="key-alert">
+    <div class="key-alert-icon" aria-hidden="true">👥</div>
+    <div class="key-alert-body">
+      <h2>La encuesta es a los estudiantes de la lista, no al curso que hoy ocupa ese salón</h2>
+      <p>Encuestamos a <strong>los mismos estudiantes que participaron en 2025</strong>. Su lista nominal fue enviada al correo del colegio.</p>
+      <p>Hoy esos estudiantes están repartidos en <strong>cursos distintos</strong>, y algunos en otra jornada. El día de la visita el colegio debe <strong>reunir a los estudiantes de esa lista</strong> en un solo espacio, sin importar el curso en el que estén ahora.</p>
+      <button type="button" class="key-alert-btn" id="openInstructionsBtn">📋 Ver las instrucciones completas de la encuesta</button>
+    </div>
+  </section>
 
   <section class="how-card">
     <ol class="how-steps">
       <li>
         <div class="how-icon" aria-hidden="true">1</div>
         <div class="how-text">
-          <strong>Identifica tu aula</strong> (localidad → colegio · jornada · curso). Verás la <em>fecha asignada</em>.
+          <strong>Identifica tu grupo de 2025</strong> (localidad → colegio · jornada · curso). El curso que aparece es <em>el que tenían los estudiantes en 2025</em>, no el de este año. Verás la <em>fecha asignada</em>.
         </div>
       </li>
       <li>
         <div class="how-icon" aria-hidden="true">2</div>
         <div class="how-text">
-          <strong>Elige la hora en esa fecha.</strong> Si el aula realmente no puede ese día, hay opción de elegir otro día de la misma semana — pero agradecemos cumplir la fecha asignada por logística.
+          <strong>Elige la hora en esa fecha.</strong> Si el colegio realmente no puede ese día, hay opción de elegir otro día de la misma semana — pero agradecemos cumplir la fecha asignada por logística.
         </div>
       </li>
       <li>
@@ -1573,14 +1770,20 @@
       <li>
         <div class="how-icon" aria-hidden="true">4</div>
         <div class="how-text">
-          <strong>Los materiales para la encuesta los lleva el equipo encuestador.</strong> Por favor garantizar acceso al salón en la fecha y hora reservadas.
+          <strong>Reúne a los estudiantes de la lista</strong> el día y la hora reservados, <em>aunque hoy estén en cursos diferentes</em>. Son los mismos estudiantes que participaron en 2025; la lista fue enviada al correo del colegio. Por favor garantizar el ingreso del equipo al espacio acordado.
         </div>
       </li>
       <li>
         <div class="how-icon" aria-hidden="true">5</div>
         <div class="how-text">
-          <strong>Recuerda hacer llegar a los acudientes el documento de notificación a familias.</strong>
+          <strong>Haz llegar a los acudientes el documento de notificación a familias.</strong> No hace falta enviárnoslo: basta con tenerlo disponible el día de la visita.
           <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="inline-download">Descárgalo aquí ⬇</a>
+        </div>
+      </li>
+      <li>
+        <div class="how-icon" aria-hidden="true">6</div>
+        <div class="how-text">
+          <strong>Ten a la mano los registros de asistencia y de disciplina</strong> (planillas y observador del estudiante) de los estudiantes de la lista. El equipo solo cuenta el número de inasistencias y de faltas, sin registrar el detalle de los hechos.
         </div>
       </li>
     </ol>
@@ -1601,8 +1804,10 @@
   <section class="step-card" id="step1Card">
     <div class="step-head">
       <div class="step-num">1</div>
-      <h2>Identifica tu aula</h2>
+      <h2>Identifica tu grupo de 2025</h2>
     </div>
+
+    <p class="step-hint">El curso que aparece en la lista es el que tenían los estudiantes <strong>en 2025</strong>. Hoy pueden estar en cursos distintos: la encuesta sigue siendo para ellos.</p>
 
     <div class="form-row search-row">
       <label for="schoolSearch">Busca tu colegio por nombre</label>
@@ -1624,7 +1829,7 @@
       </select>
     </div>
     <div class="form-row">
-      <label for="schoolSelect">Colegio · Jornada · Aula</label>
+      <label for="schoolSelect">Colegio · Jornada · Curso en 2025</label>
       <select id="schoolSelect" required disabled>
         <option value="">Primero selecciona la localidad</option>
       </select>
@@ -1640,11 +1845,13 @@
       <h2 id="step2Title">Elige la hora</h2>
     </div>
 
-    <!-- Aula ya tiene una reserva -->
+    <div class="aula-warning" id="rosterWarning"></div>
+
+    <!-- El grupo ya tiene una reserva -->
     <div class="already-booked" id="alreadyBookedBox" hidden>
       <div class="already-booked-icon">✓</div>
       <div style="flex:1">
-        <div class="already-booked-title">Esta aula ya tiene una reserva</div>
+        <div class="already-booked-title">Este grupo ya tiene una reserva</div>
         <div class="already-booked-time" id="alreadyBookedTime"></div>
         <div class="already-booked-actions">
           <button type="button" class="btn btn-primary" id="rescheduleBtn">Reprogramar cita</button>
@@ -1659,7 +1866,7 @@
     <div class="assigned-banner" id="assignedBanner" hidden>
       <div class="assigned-banner-label">Tu fecha asignada es</div>
       <div class="assigned-banner-date" id="assignedBannerDate">—</div>
-      <div class="assigned-banner-help">Elige el bloque de clases (la hora) que mejor le quede al aula ese día.</div>
+      <div class="assigned-banner-help">Elige el bloque de clases (la hora) que mejor le quede al colegio ese día para reunir a los estudiantes de la lista.</div>
     </div>
 
     <!-- Chips de horas para el día asignado -->
@@ -1676,7 +1883,7 @@
         <div class="chip-grid" id="afternoonChips"></div>
       </div>
       <button type="button" class="btn-otherday" id="showWeekBtn">
-        📅 ¿El aula NO puede ese día? Haz clic aquí para reservar otro día
+        📅 ¿El colegio NO puede ese día? Haz clic aquí para reservar otro día
       </button>
     </div>
 
@@ -1823,6 +2030,88 @@
   </details>
 </div>
 
+<!-- =================================================================
+     Modal de instrucciones completas de la encuesta
+     ================================================================= -->
+<div class="instr-backdrop" id="instrModal" hidden role="dialog" aria-modal="true" aria-labelledby="instrTitle">
+  <div class="instr-modal">
+    <div class="instr-head">
+      <h2 id="instrTitle">
+        <span class="instr-sub">Instrucciones para el colegio</span>
+        Encuesta de Clima de Aula 2026 — visita de seguimiento
+      </h2>
+      <button type="button" class="instr-x" id="instrCloseX" aria-label="Cerrar">×</button>
+    </div>
+
+    <div class="instr-body">
+
+      <div class="instr-sec">
+        <h3>1. ¿A quién se le aplica la encuesta?</h3>
+        <div class="instr-callout">
+          <p><strong>A los mismos estudiantes que participaron en 2025</strong>, uno por uno, según la lista nominal que enviamos al correo del colegio. <strong>No se le aplica al curso que hoy ocupa ese salón.</strong></p>
+        </div>
+        <p>El estudio empezó en 2025 con un curso de su institución. Este año medimos otra vez a <strong>esos mismos estudiantes</strong>, para ver cómo han cambiado con el tiempo la convivencia, las relaciones entre compañeros, el bienestar emocional y el desempeño académico.</p>
+        <p>Un año después, esos estudiantes ya <strong>no están todos juntos</strong>: pasaron de grado, cambiaron de curso y algunos cambiaron de jornada. Por eso el colegio debe <strong>reunirlos a ellos</strong> el día de la visita, aunque hoy pertenezcan a cursos distintos.</p>
+        <div class="instr-good">
+          <p><strong>Si un estudiante de la lista ya no está en el colegio</strong>, no hay que hacer nada especial: solo indíquelo al equipo el día de la visita. Nadie que no esté en la lista debe presentarse.</p>
+        </div>
+        <p>Es la misma medición del año pasado, aplicada de la misma manera en todas las instituciones vinculadas al estudio. <strong>De ninguna manera busca evaluar a la institución, a sus docentes o a sus estudiantes.</strong></p>
+      </div>
+
+      <div class="instr-sec">
+        <h3>2. Cómo funciona la visita</h3>
+        <ul>
+          <li><strong>Dura un solo bloque de clase.</strong> La encuesta combina preguntas y juegos interactivos.</li>
+          <li><strong>Llevamos todo lo necesario</strong> — celulares, audífonos y demás materiales. El colegio <strong>no necesita internet ni computadores</strong>.</li>
+          <li><strong>Solo pedimos un espacio sin interrupciones</strong> donde los estudiantes de la lista puedan trabajar. Una biblioteca o un salón disponible funciona perfectamente.</li>
+          <li><strong>Llevamos dulces de regalo</strong> para los estudiantes, en agradecimiento por su participación.</li>
+          <li>Una persona de contacto del colegio recibe al equipo. El equipo la llamará ese día para coordinar el ingreso.</li>
+        </ul>
+      </div>
+
+      <div class="instr-sec">
+        <h3>3. Le pedimos tres cosas concretas</h3>
+        <ol>
+          <li>
+            <strong>Confirmar la fecha y la hora de la visita, en esta misma página.</strong>
+            A su institución ya le asignamos un día, pensando en la programación general de visitas. Si le viene bien, basta con confirmar la hora. Si no le conviene, en esta página puede elegir libremente otra fecha entre el <strong>15 de septiembre y el 30 de octubre de 2026</strong>. Los cupos por día son limitados y se asignan en orden de reserva, así que agradecemos hacerlo con la mayor anticipación posible.
+          </li>
+          <li>
+            <strong>Revisar la lista de estudiantes que llegó al correo</strong> — para que estén preparados el día de la visita — y <strong>hacer llegar a las familias el documento de notificación</strong>. Si un padre o acudiente no desea que su hijo o hija participe, puede manifestarlo por ese medio; ningún estudiante cuya familia haya expresado su negativa será encuestado. No hace falta enviárnoslos: basta con tenerlos disponibles el día de la encuesta.
+            <br>
+            <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="instr-btn">⬇ Descargar el documento de notificación a familias</a>
+          </li>
+          <li>
+            <strong>Tener disponibles los registros de asistencia y de disciplina</strong> (planillas y observador del estudiante) de los estudiantes de la lista. El día de la visita nuestro equipo cuenta el número de inasistencias y de faltas de disciplina, <strong>sin registrar el detalle de los sucesos</strong>. Esta información nos permite ver cómo el clima de aula influye en el comportamiento de los estudiantes. Todo se trata de manera anónima y confidencial.
+          </li>
+        </ol>
+      </div>
+
+      <div class="instr-sec">
+        <h3>4. Qué recibe el colegio</h3>
+        <p>Al cierre del estudio, su institución recibirá un <strong>reconocimiento por su apoyo</strong> y un <strong>reporte con los resultados y recomendaciones concretas</strong> en convivencia escolar, salud emocional y apoyo pedagógico.</p>
+        <p>Además, quedan invitados a la <strong>jornada de presentación de resultados: martes 2 de febrero de 2027</strong>, una conferencia con desayuno incluido. El lugar se comunicará más adelante.</p>
+      </div>
+
+      <div class="instr-sec">
+        <h3>5. Confidencialidad</h3>
+        <p>El estudio lo adelanta la <strong>Oficina para la Convivencia Escolar de la Secretaría de Educación del Distrito</strong>, en alianza con el equipo de investigación de la <strong>Escuela de Economía de París</strong> (Paris School of Economics).</p>
+        <p>La participación es confidencial y está aprobada por el comité de ética de la Escuela de Economía de París. La información se maneja de forma anónima y se utiliza únicamente con fines de investigación.</p>
+      </div>
+
+      <div class="instr-sec">
+        <h3>6. ¿Dudas?</h3>
+        <p>Escríbanos al WhatsApp del proyecto: <a href="https://wa.me/573019597822" target="_blank" rel="noopener" class="wa-inline-link"><strong>+57 301 959 78 22</strong></a>.</p>
+      </div>
+
+    </div>
+
+    <div class="instr-foot">
+      <button type="button" class="btn btn-primary" id="instrCloseBtn">Entendido</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Confirmation modal: appears after a successful booking -->
@@ -1841,7 +2130,7 @@
         <span class="cm-val" id="confirmModalTime">—</span>
       </div>
       <div class="cm-row">
-        <span class="cm-label">Aula</span>
+        <span class="cm-label">Grupo</span>
         <span class="cm-val cm-val-aula" id="confirmModalAula">—</span>
       </div>
     </div>
@@ -1849,7 +2138,7 @@
     <div class="confirm-modal-reminder">
       <div class="cm-reminder-icon" aria-hidden="true">📄</div>
       <div class="cm-reminder-body">
-        <div class="cm-reminder-title">No olvides enviar la notificación a las familias</div>
+        <div class="cm-reminder-title">No olvides: reúne ese día a los estudiantes de la lista de 2025 (aunque hoy estén en cursos distintos) y envía antes la notificación a las familias</div>
         <a href="disentimiento-encuesta-clima-aula.pdf?v=1" download="disentimiento-encuesta-clima-aula.pdf" class="cm-reminder-btn">⬇ Descargar PDF</a>
       </div>
     </div>
@@ -2112,7 +2401,7 @@ function renderSlotContent_(btn, slotBookings, cuposText) {
 function slotBookingsAriaLabel_(hour, minute, date, slotBookings, cuposText) {
   const base = `${formatTime(hour, minute)} ${formatDateLong(date)}: ${cuposText}`;
   if (!slotBookings || !slotBookings.length) return base;
-  const names = slotBookings.map(b => `${b.colegio} aula ${b.clase}`).join(', ');
+  const names = slotBookings.map(b => `${b.colegio} grupo ${b.clase}`).join(', ');
   return `${base}. Ya reservaron: ${names}.`;
 }
 
@@ -2282,7 +2571,7 @@ function showStep2View(view) {
   const title = document.getElementById('step2Title');
   if      (view === 'already-booked') title.textContent = 'Estado de tu reserva';
   else if (view === 'day-chips')      title.textContent = 'Elige la hora';
-  else if (view === 'week-fallback')  title.textContent = 'Si el aula no puede en la fecha propuesta, elige otra fecha';
+  else if (view === 'week-fallback')  title.textContent = 'Si el colegio no puede en la fecha propuesta, elige otra fecha';
   else                                title.textContent = 'Elige día y hora';
 }
 
@@ -2297,9 +2586,10 @@ function setupStep2ForSelectedAula() {
   // Changing aula invalidates any previously selected slot / reschedule state.
   selectedSlot = null;
   rescheduleMode = false;
-  if (!sel) { showStep('identify'); return; }
+  if (!sel) { renderRosterWarning(null); showStep('identify'); return; }
 
   showStep('pick-slot');
+  renderRosterWarning(sel);
 
   // 1) Aula already reserved? Show status + offer reschedule.
   const existing = findExistingReservationForAula(sel);
@@ -2329,7 +2619,7 @@ function showSlotPickerForAula(sel) {
       showWeekBtn.textContent = '📅 Ver otras fechas disponibles';
     } else {
       fullWarn.hidden = true;
-      showWeekBtn.textContent = '📅 ¿El aula NO puede ese día? Haz clic aquí para reservar otro día';
+      showWeekBtn.textContent = '📅 ¿El colegio NO puede ese día? Haz clic aquí para reservar otro día';
     }
     return;
   }
@@ -2367,7 +2657,7 @@ function selectSlot(date, hour, minute, key) {
     const metaParts = [];
     if (sel.sede)    metaParts.push(`Sede ${sel.sede}`);
     if (sel.jornada) metaParts.push(`Jornada ${titleCase(sel.jornada)}`);
-    if (sel.clase)   metaParts.push(`Aula ${sel.clase}`);
+    if (sel.clase)   metaParts.push(`Curso en 2025: ${sel.clase}`);
     document.getElementById('confirmAulaMeta').textContent = metaParts.join(' · ');
   }
   document.getElementById('formError').classList.remove('show');
@@ -2776,6 +3066,36 @@ function showToast(msg, type = '') {
   showToast._t = setTimeout(() => t.classList.remove('show'), 5500);
 }
 
+// ----- Instrucciones completas (modal) -----
+function openInstructions() {
+  const m = document.getElementById('instrModal');
+  m.hidden = false;
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('instrCloseX').focus(), 60);
+}
+
+function closeInstructions() {
+  document.getElementById('instrModal').hidden = true;
+  document.body.style.overflow = '';
+}
+
+// ----- Aviso: la encuesta es a los estudiantes de la lista de 2025 -----
+// Se muestra en el paso 2, en cuanto el colegio escoge su grupo.
+function renderRosterWarning(sel) {
+  const box = document.getElementById('rosterWarning');
+  if (!box) return;
+  if (!sel) { box.classList.remove('show'); box.innerHTML = ''; return; }
+  const n = sel.n_roster;
+  const cuantos = n ? `los <strong>${n} estudiantes</strong>` : 'los estudiantes';
+  box.innerHTML =
+    `👥 Vas a reservar la visita para ${cuantos} que en <strong>2025</strong> estaban en el ` +
+    `curso <strong>${escapeHtml_(sel.clase || '')}</strong> de este colegio (jornada ` +
+    `${escapeHtml_(titleCase(sel.jornada || ''))}). Su lista nominal fue enviada al correo del colegio.<br>` +
+    `<strong>No es al curso ${escapeHtml_(sel.clase || '')} de este año.</strong> Hoy esos estudiantes ` +
+    `están en cursos distintos: el día de la visita hay que reunirlos a ellos.`;
+  box.classList.add('show');
+}
+
 // ----- Confirmation modal -----
 function showConfirmModal(date, hour, minute, sel, isReschedule) {
   document.getElementById('confirmModalTitle').textContent =
@@ -2786,7 +3106,7 @@ function showConfirmModal(date, hour, minute, sel, isReschedule) {
   const meta = [];
   if (sel && sel.sede)    meta.push(`Sede ${sel.sede}`);
   if (sel && sel.jornada) meta.push(`Jornada ${titleCase(sel.jornada)}`);
-  if (sel && sel.clase)   meta.push(`Aula ${sel.clase}`);
+  if (sel && sel.clase)   meta.push(`Curso en 2025: ${sel.clase}`);
   if (meta.length) aulaParts.push(meta.join(' · '));
   document.getElementById('confirmModalAula').innerHTML =
     aulaParts.filter(Boolean).map(s => `<div>${escapeHtml_(s)}</div>`).join('');
@@ -2807,13 +3127,15 @@ function setupCalendarButtons_(date, hour, minute, sel) {
   const start = stamp(date, hour, minute);
   const end   = stamp(date, endH, minute);
 
-  const titulo = `Encuesta de Clima de Aula — ${sel.colegio} · Aula ${sel.clase}`;
+  const titulo = `Encuesta de Clima de Aula — ${sel.colegio} · grupo ${sel.clase} de 2025`;
   const direccion = (document.getElementById('direccionInput').value || '').trim();
   const lugar = direccion || [sel.colegio, sel.sede && `Sede ${sel.sede}`].filter(Boolean).join(' — ');
   const detalles =
     `Visita del equipo encuestador (bloque de 2 horas).\n` +
-    `Jornada ${sel.jornada} · Aula ${sel.clase}.\n` +
-    `El equipo lleva todos los materiales; solo se necesita un salón sin interrupciones.\n` +
+    `Jornada ${sel.jornada} · estudiantes que en 2025 estaban en el curso ${sel.clase}.\n` +
+    `IMPORTANTE: la encuesta es a los estudiantes de la lista enviada por correo, no al curso ${sel.clase} de este anio. Hoy estan repartidos en cursos distintos y hay que reunirlos.\n` +
+    `El equipo lleva todos los materiales; solo se necesita un salon sin interrupciones.\n` +
+    `Tener a la mano las planillas de asistencia y el observador del estudiante.\n` +
     `Dudas: WhatsApp +57 301 959 78 22`;
 
   const gcal = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
@@ -3468,6 +3790,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('rescheduleBtn').addEventListener('click', startReschedule);
   document.getElementById('phoneInput').addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  });
+
+  // --- Instrucciones (modal) ---
+  document.getElementById('openInstructionsBtn').addEventListener('click', openInstructions);
+  document.getElementById('instrCloseX').addEventListener('click', closeInstructions);
+  document.getElementById('instrCloseBtn').addEventListener('click', closeInstructions);
+  document.getElementById('instrModal').addEventListener('click', (e) => {
+    if (e.target.id === 'instrModal') closeInstructions();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.getElementById('instrModal').hidden) closeInstructions();
   });
 
   // --- Confirmation modal ---
