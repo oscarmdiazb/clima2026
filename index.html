@@ -1719,12 +1719,15 @@
     .form-actions { flex-direction: column-reverse; }
     .form-actions .btn { width: 100%; }
   }
+  /* Acceso al panel interno. Se ve igual que el resto del rótulo a propósito:
+     esta página la abren los colegios y el panel no es para ellos. */
+  .brand-k { color: inherit; text-decoration: none; cursor: inherit; }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-    <div class="brand">OCE-SED · Encuesta de clima de aula · Reservas 2026 R12</div>
+    <div class="brand">OCE-SED · Encuesta de clima de aula · Reservas 2026 <a href="./panel.html" class="brand-k">R12</a></div>
     <h1>Reserva el horario de la visita de seguimiento — Encuesta de Clima de Aula 2026</h1>
     <p class="lead">La encuesta se aplica a <strong>los mismos estudiantes que participaron en 2025</strong> — la lista nominal que enviamos al correo del colegio. A cada grupo se le asignó un día por logística: aquí solo eliges la hora.</p>
   </header>

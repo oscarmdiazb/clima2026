@@ -139,3 +139,34 @@ Insumos (NO commitear — están en `Encuesta/seguimiento_largo_plazo_r1r2/reser
 - La página pública muestra colegio + aula de reservas hechas; nunca contactos ni estudiantes.
 - Los nombres de estudiantes solo salen del backend con el código del colegio. El código detiene al curioso, no a un atacante decidido: no poner documento, teléfono ni rol en el roster de la Sheet.
 - Este sitio circula por colegios de tratamiento **y** control: nada aquí puede nombrar la intervención.
+
+---
+
+## `panel.html` — panel interno de códigos
+
+Buscador de los 95 códigos de acceso, para responder al colegio que escribe pidiendo el suyo.
+Busca por colegio, localidad, sede, DANE, código, contacto o celular; copia el código, el
+enlace o un mensaje ya redactado, y abre WhatsApp con el mensaje puesto.
+
+**Va cifrado**: PBKDF2-SHA256 200.000 iteraciones → AES-GCM-256. Este repo es público, así que
+lo que se sube es texto cifrado y la contraseña **no está en ninguna parte del repo**: vive en
+`Encuesta/seguimiento_largo_plazo_r1r2/confirmacion_listas/publicar_consulta_codigos.py`, que
+nunca sale de OneDrive.
+
+El enlace está **escondido en el rótulo de `index.html`**: el «R12» del final es el enlace, con
+el mismo color, sin subrayado y sin cambio de cursor. La página la abren los colegios y el panel
+no es para ellos; quien lo pulse por accidente se topa con la contraseña.
+
+Para regenerarlo:
+```bash
+cd "../Encuesta/seguimiento_largo_plazo_r1r2/confirmacion_listas"
+python3 construir_campana_confirmacion.py   # refresca reservas y confirmaciones
+python3 construir_consulta_codigos.py       # arma la página en claro
+python3 publicar_consulta_codigos.py        # la cifra y la deja en este repo
+```
+El publicador **aborta** si en el archivo cifrado quedara legible un nombre de colegio, un
+correo, un celular o un enlace con código. `consulta_codigos.html` (la versión en claro) no
+se commitea nunca — su carpeta tiene un `.gitignore` que lo ignora todo.
+
+`crypto.subtle` necesita contexto seguro: funciona sobre `https://` y como archivo local en
+Chrome, pero **no** sobre `http://` plano.
