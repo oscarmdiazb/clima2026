@@ -37,16 +37,11 @@ button.sec{background:var(--blanco);color:var(--verde);border:1px solid var(--ve
 button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 
 /* ---- ayuda: pedir el codigo por WhatsApp ---- */
-.wa-help{margin-top:18px;padding:14px 16px;background:var(--verde-cl);
-  border:1px solid #6ee7b7;border-radius:10px}
-.wa-help-title{margin:0 0 2px;font-weight:800;color:var(--verde);font-size:.95rem}
-.wa-help-sub{margin:0 0 10px;color:#065f46;font-size:.88rem;line-height:1.45}
-.wa-btn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#0b2e1c;
-  text-decoration:none;border-radius:9px;padding:11px 16px;font-weight:800;font-size:.95rem}
+.wa-line{margin-top:14px;font-size:.88rem;color:var(--mut);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wa-btn{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#0b2e1c;
+  text-decoration:none;border-radius:8px;padding:8px 13px;font-weight:800;font-size:.88rem}
 .wa-btn:hover{background:#1ebe5b}
-.wa-btn .wa-ico{font-size:1.1rem}
-.wa-help .footer-note{margin-top:10px}
-@media (max-width:520px){ .wa-btn{display:flex;justify-content:center} }
 
 .msg{padding:12px 14px;border-radius:8px;margin:12px 0;font-size:.95rem;display:none}
 .msg.err{display:block;background:var(--rojo-cl);color:var(--rojo)}
@@ -146,14 +141,9 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   </div>
   <div class="msg err" id="loginErr"></div>
   <p style="margin-top:16px"><button id="btnLoad">Ver la lista de mi colegio</button></p>
-  <div class="wa-help">
-    <p class="wa-help-title">¿No tiene el código o lo perdió?</p>
-    <p class="wa-help-sub">Escríbanos por WhatsApp y se lo enviamos de una vez. El mensaje ya va escrito: solo complete el nombre del colegio y envíelo.</p>
-    <a class="wa-btn" href="https://wa.me/573019597822?text=Hola%2C%20escribo%20desde%20el%20colegio%20____________%20%28jornada%20______%29.%20No%20tengo%20el%20codigo%20de%20acceso%20para%20ver%20y%20confirmar%20la%20lista%20de%20estudiantes%20de%20la%20Encuesta%20de%20Clima%20de%20Aula%202026.%20%C2%BFMe%20lo%20pueden%20enviar%2C%20por%20favor%3F" target="_blank" rel="noopener">
-      <span class="wa-ico" aria-hidden="true">💬</span> Pedir el código por WhatsApp
-    </a>
-    <p class="footer-note">También puede responder el correo de invitación y se lo reenviamos.</p>
-  </div>
+  <p class="wa-line">¿No tiene el código?
+    <a class="wa-btn" href="https://wa.me/573019597822?text=Hola%2C%20escribo%20desde%20el%20colegio%20____________%20%28jornada%20______%29.%20No%20tengo%20el%20codigo%20de%20acceso%20para%20ver%20y%20confirmar%20la%20lista%20de%20estudiantes%20de%20la%20Encuesta%20de%20Clima%20de%20Aula%202026.%20%C2%BFMe%20lo%20pueden%20enviar%2C%20por%20favor%3F" target="_blank" rel="noopener">💬 Pedir código por WhatsApp</a>
+  </p>
 </div>
 
 <!-- ============ 2. LISTA ============ -->
@@ -373,38 +363,41 @@ function fechaBonita(iso){
   return dias[d.getDay()] + " " + (+p[2]) + " de " + meses[+p[1]-1] + " de " + p[0];
 }
 
-// Una línea por aula. Muestra la reserva real si existe; si no, la fecha
-// sugerida. El dato sale del mismo aplicativo de reservas (pestaña Reservas,
-// y como respaldo Asignaciones), así que no puede desincronizarse.
+// El backend entrega O la fecha reservada O la sugerida, nunca las dos
+// mezcladas (la reserva manda). Aquí solo se pinta lo que llegue.
 function lineaFecha(f){
   const aula = [f.clase ? "curso " + f.clase : "",
                 f.jornada ? "jornada " + f.jornada.toLowerCase() : ""].filter(Boolean).join(", ");
   return "<div style='margin-top:4px'>\uD83D\uDCC5&nbsp;<b>" + esc(fechaBonita(f.fecha)) + "</b>" +
     (f.hora ? " a las " + esc(f.hora) : "") +
     (aula ? " <span style='font-weight:400'>· " + esc(aula) + "</span>" : "") +
-    " <span style='font-weight:400'>(" +
-      (f.tipo === "reservada" ? "ya reservada" : "fecha sugerida, sin reservar") +
-    ")</span></div>";
+    "</div>";
+}
+
+function cajaFecha(el){
+  el.classList.remove("hidden","si","no");
+  if(!ESTADO.fechas.length){
+    el.classList.add("no");
+    el.innerHTML = "\u26A0\uFE0F&nbsp;Su colegio todavía <b>no tiene fecha de visita</b>." +
+      "<div style='margin-top:8px'><a href='" + URL_RESERVAS + "' style='color:inherit;font-weight:700'>" +
+      "Reservar la fecha en el aplicativo de reservas →</a></div>";
+    return;
+  }
+  const reservada = ESTADO.fechas[0].tipo === "reservada";
+  el.classList.add(reservada ? "si" : "no");
+  el.innerHTML =
+    "<b>" + (reservada ? "Visita de la encuesta \u2014 ya reservada"
+                       : "Fecha sugerida para la visita \u2014 todavía sin reservar") + "</b>" +
+    ESTADO.fechas.map(lineaFecha).join("") +
+    "<div style='margin-top:8px'><a href='" + URL_RESERVAS + "' style='color:inherit;font-weight:700'>" +
+    (reservada ? "Ver o cambiar la fecha en el aplicativo de reservas →"
+               : "Reservar la hora en el aplicativo de reservas →") + "</a></div>";
 }
 
 function pintarCabecera(){
   $("colegioName").textContent = ESTADO.colegio;
   $("listMeta").textContent = ESTADO.alumnos.length + " estudiantes en la lista de 2025.";
-  const fb = $("fechaBox");
-  fb.classList.remove("hidden","si","no");
-  const hayReserva = ESTADO.fechas.some(f => f.tipo === "reservada");
-  const enlace = "<div style='margin-top:8px'><a href='" + URL_RESERVAS +
-    "' style='color:inherit;font-weight:700'>" +
-    (hayReserva ? "Ver o cambiar la fecha en el aplicativo de reservas →"
-                : "Reservar la fecha en el aplicativo de reservas →") + "</a></div>";
-  if(ESTADO.fechas.length){
-    fb.classList.add(hayReserva ? "si" : "no");
-    fb.innerHTML = "<b>Visita de la encuesta</b>" +
-      ESTADO.fechas.map(lineaFecha).join("") + enlace;
-  }else{
-    fb.classList.add("no");
-    fb.innerHTML = "\u26A0\uFE0F&nbsp;Su colegio todavía <b>no tiene fecha de visita</b>." + enlace;
-  }
+  cajaFecha($("fechaBox"));
 }
 
 /* sugerencias de curso 2026 = cursos promovidos de la lista + los ya escritos */
@@ -654,20 +647,10 @@ function mostrarRecibo(n){
     "<tr><td>Siguen en el colegio</td><td>" + sigue + "</td></tr>" +
     "<tr><td>Ya no están</td><td>" + salio + "</td></tr>" +
     "<tr><td>Total de la lista</td><td>" + ESTADO.alumnos.length + "</td></tr>";
-  const rf = $("reciboFecha");
-  const hayReserva = ESTADO.fechas.some(f => f.tipo === "reservada");
-  rf.classList.remove("hidden","si","no");
+  cajaFecha($("reciboFecha"));
   if(ESTADO.fechas.length){
-    rf.classList.add(hayReserva ? "si" : "no");
-    rf.innerHTML = "<b>Recuerde la visita</b>" + ESTADO.fechas.map(lineaFecha).join("") +
-      "<div style='margin-top:6px;font-weight:400'>Los estudiantes de la lista deben estar avisados ese día.</div>" +
-      "<div style='margin-top:8px'><a href='" + URL_RESERVAS + "' style='color:inherit;font-weight:700'>" +
-      (hayReserva ? "Ver o cambiar la fecha en el aplicativo de reservas →"
-                  : "Reservar la fecha en el aplicativo de reservas →") + "</a></div>";
-  }else{
-    rf.classList.add("no");
-    rf.innerHTML = "\u26A0\uFE0F&nbsp;Falta reservar la fecha de la visita. " +
-      "<a href='" + URL_RESERVAS + "' style='color:inherit;font-weight:700'>Reservarla aquí →</a>";
+    $("reciboFecha").innerHTML += "<div style='margin-top:6px;font-weight:400'>" +
+      "Los estudiantes de la lista deben estar avisados ese día.</div>";
   }
   ESTADO.enviado = true;
   $("listCard").classList.add("hidden");

@@ -38,7 +38,7 @@ Diseñada para que un coordinador la termine en pocos minutos, desde el celular:
 | **Reanudar** | al volver a entrar carga lo ya enviado al servidor y lo local (gana lo local) |
 | **Motivo de salida** | `otro_colegio` · `retiro` · `traslado_ciudad` · `nunca_estuvo` · `no_sabemos`, más el colegio o ciudad destino en texto libre |
 | **Buscador y filtros** | Todos / Sin marcar / Siguen / Ya no están |
-| **Fecha de la visita** | una línea por aula, con la **reserva real** si existe y la fecha preasignada si no. Sale de las mismas pestañas `Reservas`/`Asignaciones` que usa `index.html`, así que no puede desincronizarse. Siempre enlaza al aplicativo de reservas |
+| **Fecha de la visita** | **una sola fecha: la reservada, o la sugerida si el colegio no ha reservado — nunca las dos.** Sale de las mismas pestañas `Reservas`/`Asignaciones` que usa `index.html`, así que no puede desincronizarse. Si un colegio tiene varias aulas en el mismo día y hora, se colapsan en una línea. Siempre enlaza al aplicativo de reservas |
 | **Recibo** | resumen imprimible al terminar |
 | Celular | tarjetas, no tabla; barra fija con el progreso |
 

@@ -915,13 +915,13 @@ function getAssignmentsFull_() {
   return out;
 }
 
-// Fechas de visita del colegio: la reserva real manda; si un aula no ha
-// reservado, se muestra su fecha preasignada. SOLO LECTURA sobre Reservas.
+// Fecha de la visita del colegio. O la reservada O la sugerida, nunca las dos
+// mezcladas: si el colegio ya reservó, la reserva manda y la sugerida se
+// descarta. SOLO LECTURA sobre Reservas.
 function getFechasForDane_(dane) {
   const k = daneKey_(dane);
-  const out = [];
-  const reservadas = {};              // "JORNADA|CLASE" → true
-  if (!k) return out;
+  if (!k) return [];
+  const reservadas = [];
   try {
     const sheet = getSheet_();
     const lastRow = sheet.getLastRow();
@@ -934,24 +934,37 @@ function getFechasForDane_(dane) {
         const slot = (Object.prototype.toString.call(raw) === '[object Date]')
           ? Utilities.formatDate(raw, TIMEZONE, 'yyyy-MM-dd HH:mm')
           : normalizeSlotKey_(String(raw).trim());
-        const jornada = String(v[i][4] || '').trim();
-        const clase   = String(v[i][5] || '').trim();
-        reservadas[normJornada_(jornada) + '|' + claseKey_(clase)] = true;
-        out.push({ fecha: slot.slice(0, 10), hora: slot.slice(11, 16),
-                   jornada: jornada, clase: clase, tipo: 'reservada' });
+        reservadas.push({ fecha: slot.slice(0, 10), hora: slot.slice(11, 16),
+                          jornada: String(v[i][4] || '').trim(),
+                          clase:   String(v[i][5] || '').trim(),
+                          tipo: 'reservada' });
       }
     }
   } catch (err) { /* si Reservas no existe seguimos con Asignaciones */ }
-  const asg = getAssignmentsFull_();
-  for (let i = 0; i < asg.length; i++) {
-    const a = asg[i];
-    if (a.dane12 !== k || !a.fecha) continue;
-    if (reservadas[normJornada_(a.jornada) + '|' + claseKey_(a.clase)]) continue;  // ya reservó
-    out.push({ fecha: a.fecha, hora: '', jornada: a.jornada, clase: a.clase,
-               tipo: 'asignada' });
+
+  let out = reservadas;
+  if (!out.length) {                                  // nadie reservó → la sugerida
+    const asg = getAssignmentsFull_();
+    out = [];
+    for (let i = 0; i < asg.length; i++) {
+      const a = asg[i];
+      if (a.dane12 !== k || !a.fecha) continue;
+      out.push({ fecha: a.fecha, hora: '', jornada: a.jornada, clase: a.clase,
+                 tipo: 'asignada' });
+    }
   }
-  out.sort(function (x, y) { return x.fecha < y.fecha ? -1 : (x.fecha > y.fecha ? 1 : 0); });
-  return out;
+
+  // Varias aulas en el mismo día y hora son UNA sola visita: se colapsan, y se
+  // quita la etiqueta del curso porque ya no describe a una sola aula.
+  const porSlot = {}; const orden = [];
+  for (let i = 0; i < out.length; i++) {
+    const key = out[i].fecha + ' ' + out[i].hora;
+    if (!porSlot[key]) { porSlot[key] = out[i]; porSlot[key].n = 1; orden.push(key); }
+    else { porSlot[key].n++; porSlot[key].clase = ''; porSlot[key].jornada = ''; }
+  }
+  const fin = orden.map(function (kk) { return porSlot[kk]; });
+  fin.sort(function (x, y) { return x.fecha < y.fecha ? -1 : (x.fecha > y.fecha ? 1 : 0); });
+  return fin;
 }
 
 // dane es OPCIONAL: si no viene, lo deducimos del código (así el colegio solo
