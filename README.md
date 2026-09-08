@@ -24,8 +24,8 @@ https://oscarmdiazb.github.io/clima2026/c.html?c=<CÓDIGO>
 (`&d=<DANE>` sigue aceptándose y solo hace falta si un código apuntara a dos sedes.)
 
 La página trae del backend la lista de estudiantes de ese colegio y, por cada uno, el colegio
-marca **Sigue / Ya no está**. Si sigue, el **curso de 2026**; si ya no está, **qué pasó** y
-**a dónde se fue**. El envío reescribe las filas de ese colegio en la pestaña
+marca **Sigue / Ya no está en el colegio**. Si sigue, el **curso y la jornada de 2026**;
+si ya no está, **qué pasó**. El envío reescribe las filas de ese colegio en la pestaña
 `ConfirmacionesLista` y deja una fila de auditoría en `ConfirmacionesLog`.
 
 Diseñada para que un coordinador la termine en pocos minutos, desde el celular:
@@ -37,7 +37,7 @@ Diseñada para que un coordinador la termine en pocos minutos, desde el celular:
 | **Guardar avance** | se puede enviar incompleto y seguir después con el mismo enlace |
 | **Autoguardado local** | lo marcado queda en `localStorage`; si cierran la página no se pierde |
 | **Reanudar** | al volver a entrar carga lo ya enviado al servidor y lo local (gana lo local) |
-| **Motivo de salida** | `otro_colegio` · `retiro` · `traslado_ciudad` · `nunca_estuvo` · `no_sabemos`, más el colegio o ciudad destino en texto libre |
+| **Motivo de salida** | `otro_colegio` · `retiro` · `traslado_ciudad` · `nunca_estuvo` · `no_sabemos`. **No se pregunta a dónde se fue** (8-sep-2026): el colegio no lo sabe y la pregunta hacía ver la tarea más pesada de lo que es |
 | **Buscador y filtros** | Todos / Sin marcar / Siguen / Ya no están |
 | **Fecha de la visita** | **una sola fecha: la reservada, o la sugerida si el colegio no ha reservado — nunca las dos.** Sale de las mismas pestañas `Reservas`/`Asignaciones` que usa `index.html`, así que no puede desincronizarse. Si un colegio tiene varias aulas en el mismo día y hora, se colapsan en una línea. Siempre enlaza al aplicativo de reservas |
 | **Recibo** | resumen imprimible al terminar |
@@ -58,8 +58,8 @@ nombres de menores viajando como adjunto. Aquí el colegio **ve en pantalla lo q
 y confirma antes de enviar.
 
 La hoja `Estudiantes` sale con `#, Código, Estudiante, Curso 2025, Jornada 2025,
-¿Sigue en el colegio? (SI/NO), Curso 2026, Jornada 2026, Si ya no está: ¿qué pasó?,
-¿A qué colegio o ciudad se fue?`. `Jornada 2026` viene ya puesta con la de 2025. Los cursos y
+¿Sigue en el colegio? (SI/NO), Curso 2026, Jornada 2026, Si ya no está: ¿qué pasó?`.
+`Jornada 2026` viene ya puesta con la de 2025. Los cursos y
 el código van forzados a texto (`t:'s'`, `z:'@'`) para que `0801` no se vuelva `801`. Una
 segunda hoja, `Instrucciones`, lista los valores aceptados.
 
@@ -71,6 +71,7 @@ segunda hoja, `Instrucciones`, lista los valores aceptados.
 | `no` · `N` · `0` · `ya no está` · `retirado` | NO |
 | `mañana` · `Mañana` · `M` — igual con T / U / C | MAÑANA / TARDE / ÚNICA / COMPLETA |
 | `se cambió a otro colegio`, `se retiró`, o el código interno | el motivo correspondiente |
+| una columna de más (p. ej. la del destino, de la plantilla vieja) | se ignora |
 | jornada en blanco | la jornada de 2025 |
 
 También: encuentra la fila de encabezados aunque haya filas basura arriba (hasta 15), mapea las
@@ -88,7 +89,7 @@ buscar a los estudiantes**: quién sale de clase y de qué salón.
 `Para la visita` va **ordenada por el curso de 2026**, no por el de 2025, con una línea en
 blanco entre cursos para recorrer salón por salón, y con las columnas *Presente (marque X)* y
 *Observaciones* vacías para escribir a mano. Encabezado con el colegio, el día y la hora de la
-visita y el total que participa. Se añaden `Ya no están` (con motivo y destino) y
+visita y el total que participa. Se añaden `Ya no están` (con el motivo) y
 `Faltan por responder` solo si hay filas que poner en ellas.
 
 ### Pestañas que escribe el backend
@@ -96,6 +97,10 @@ visita y el total que participa. Se añaden `Ya no están` (con motivo y destino
 `ConfirmacionesLista` — **una fila por estudiante, siempre el estado actual** (cada envío del
 colegio reemplaza sus filas anteriores):
 `Timestamp · DANE · Colegio · RowID · Nombre · ClaseOriginal · JornadaOriginal · Continua · CursoActual · JornadaActual · Motivo · ColegioDestino · Nota · Contacto · Telefono · Estado`
+
+> `ColegioDestino` queda **siempre vacía** desde el 8-sep-2026. Se conservó la columna
+> para no obligar a redesplegar el Apps Script; el backend sigue aceptando el campo
+> por si vuelve.
 
 `ConfirmacionesLog` — una fila por envío, nunca se borra:
 `Timestamp · DANE · Colegio · Contacto · Telefono · Estado · N_estudiantes · N_siguen · N_salieron`
