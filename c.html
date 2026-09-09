@@ -118,6 +118,12 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 .bar .txt{font-size:.83rem;color:var(--mut);margin-top:3px}
 .bar .txt b{color:var(--texto)}
 .pending{color:var(--rojo);font-weight:700}
+/* Separador entre los que faltan y los que ya vienen del rastreo. Sin él, la
+   lista de 34 se ve igual de larga que antes y se pierde la ventaja. */
+.corte{margin:22px 0 10px;padding:9px 12px;border-radius:8px;background:#eef2f7;
+  border-left:4px solid var(--verde);font-size:.88rem;color:#445061}
+.corte b{color:var(--texto)}
+.corte.arriba{background:var(--ambar-cl);border-left-color:var(--ambar);color:var(--ambar)}
 
 .footer-note{color:var(--mut);font-size:.85rem;margin-top:16px;line-height:1.5}
 .pasos{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:.92rem}
@@ -180,8 +186,9 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
     <div class="via destacada">
       <h3>Opción 1 · Aquí mismo</h3>
       <p><b>Ya adelantamos casi toda la lista</b> con los registros oficiales de matrícula.
-         Revise lo que aparece, corrija lo que esté mal y responda los pocos que nos faltan.
-         Puede guardar a medias y continuar con el mismo enlace.</p>
+         Abajo salen <b>primero los que nos faltan</b> y después los que ya ubicamos.
+         Revise, corrija lo que esté mal y envíe. Puede guardar a medias y continuar
+         con el mismo enlace.</p>
     </div>
     <div class="via">
       <h3>Opción 2 · En Excel</h3>
@@ -208,8 +215,8 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
     <button class="mini sec" id="btnLimpiar">Borrar todo lo marcado</button>
   </div>
   <div class="chips" id="filtros">
-    <button class="chip on" data-f="faltan" id="chipFaltan">Solo los que faltan</button>
-    <button class="chip" data-f="todos">Toda la lista</button>
+    <button class="chip on" data-f="todos">Toda la lista</button>
+    <button class="chip" data-f="faltan" id="chipFaltan">Solo los que faltan</button>
     <button class="chip" data-f="si">Siguen</button>
     <button class="chip" data-f="no">Ya no están</button>
   </div>
@@ -299,7 +306,7 @@ const URL_RESERVAS = "./";   // index.html del mismo sitio: el aplicativo de res
 
 let ESTADO = {
   dane: "", code: "", colegio: "", fecha: null, fechaTipo: "", fechas: [],
-  filtro: "faltan",
+  filtro: "todos",
   alumnos: [],            // [{id, nombre, clase, jornada, simat*}]
   // id → {continua:'SI'|'NO', curso, jornada, motivo, nota, fuente, tocado}
   //   fuente 'simat' + tocado:false = pre-llenado que nadie ha revisado todavía
@@ -415,8 +422,6 @@ async function cargar(code, dane){
 
     pintarCabecera();
     pintarSugerencias();
-    // Si el pre-llenado ya lo cubrió todo, no tiene sentido abrir en un filtro vacío.
-    if(!ESTADO.alumnos.some(incompleto)) ESTADO.filtro = "todos";
     sincronizarChips();
     pintar();
     $("loginCard").classList.add("hidden");
@@ -503,16 +508,37 @@ function visible(a){
   return true;
 }
 
+// La lista abre completa, pero ordenada: primero los que hay que responder y
+// después los que ya trae el rastreo, con un corte en medio. El número de cada
+// estudiante es su puesto en la lista original, no el de la pantalla, para que
+// siga sirviendo contra una lista impresa.
 function pintar(){
   const cont = $("lista");
   cont.innerHTML = "";
-  let n = 0;
-  ESTADO.alumnos.forEach((a, i) => {
-    if(!visible(a)) return;
-    n++;
-    cont.appendChild(fila(a, i + 1));
-  });
-  $("vacio").textContent = n ? "" : "Ningún estudiante coincide con ese filtro o esa búsqueda.";
+  const vis = [];
+  ESTADO.alumnos.forEach((a, i) => { if(visible(a)) vis.push({ a: a, num: i + 1 }); });
+  const faltan = vis.filter(x => incompleto(x.a));
+  const listos = vis.filter(x => !incompleto(x.a));
+
+  if(faltan.length && listos.length){
+    const c1 = document.createElement("div");
+    c1.className = "corte arriba";
+    c1.innerHTML = "⚠️ <b>Estos " + faltan.length + " nos faltan.</b> No los encontramos en los " +
+      "registros de matrícula: díganos si siguen o no en el colegio.";
+    cont.appendChild(c1);
+  }
+  faltan.forEach(x => cont.appendChild(fila(x.a, x.num)));
+
+  if(listos.length && faltan.length){
+    const c2 = document.createElement("div");
+    c2.className = "corte";
+    c2.innerHTML = "<b>Estos " + listos.length + " ya los ubicamos</b> con los registros oficiales " +
+      "de matrícula. Revíselos por encima: si algo está mal, corríjalo; si está bien, no toque nada.";
+    cont.appendChild(c2);
+  }
+  listos.forEach(x => cont.appendChild(fila(x.a, x.num)));
+
+  $("vacio").textContent = vis.length ? "" : "Ningún estudiante coincide con ese filtro o esa búsqueda.";
   progreso();
 }
 

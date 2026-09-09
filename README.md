@@ -40,7 +40,9 @@ no está, **qué pasó**. El envío reescribe las filas de ese colegio en la pes
 | **Sugerido ≠ confirmado** | las filas pre-llenadas van con borde punteado, botones en contorno y el chip *«según nuestros registros — verifique»*. Pulsar el valor sugerido lo **confirma** (no lo desmarca, como haría en una fila normal) |
 | **La nota del SIMAT** | bajo el nombre, en gris: *«SIMAT agosto 2026: Decimo · curso 1003 · jornada MAÑANA»*, o en ámbar con ⚠ cuando el estudiante no aparece o cambió de jornada o de sede |
 | **Contador honesto** | «Faltan **4** por responder de 34», nunca «0 de 34». Al terminar dice cuántas filas se aceptaron **sin revisar** |
-| **Filtro «Solo los que faltan»** | activo por defecto, con el número en el propio chip. Convierte una tarea de 34 en una de 4. Si no falta ninguno, la página abre en *Toda la lista* |
+| **Orden de la lista** | abre con **toda la lista**, pero **primero los que faltan** y después los que ya trae el rastreo, con un corte en medio que dice qué es cada grupo. El colegio ve el trabajo completo —y por tanto lo revisa— sin perder el atajo |
+| **Filtro «Solo los que faltan»** | opcional, con el número en el propio chip |
+| **Numeración estable** | el número de cada estudiante es su puesto en la lista original, no en la pantalla, para que siga sirviendo contra una lista impresa |
 | **Dos vías** | llenar **en la pantalla**, o **descargar un .xlsx ya lleno**, completarlo en Excel y **subirlo** |
 | **Guardar avance** | se puede enviar incompleto y seguir después con el mismo enlace |
 | **Autoguardado local** | lo marcado queda en `localStorage`; si cierran la página no se pierde |
