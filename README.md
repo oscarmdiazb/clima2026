@@ -15,7 +15,7 @@ Fork de [`reservas-encuesta-clima-aula-2026-oce`](https://github.com/oscarmdiazb
 | **Confirmación de listas** | **Nueva página `c.html`**: el colegio confirma qué estudiantes de su lista siguen y en qué curso están. Ver abajo |
 | Backend | Despliegue **nuevo** de Apps Script sobre una Sheet **nueva** — no reutilizar la de R3 |
 
-## Confirmación de listas (`c.html`) — «¿dónde están hoy los estudiantes?»
+## Confirmación de listas (`c.html`) — «confirme esto y corríjanos»
 
 Cada colegio recibe un enlace personal. **Basta el código; el DANE ya no se escribe:**
 ```
@@ -23,28 +23,56 @@ https://oscarmdiazb.github.io/clima2026/c.html?c=<CÓDIGO>
 ```
 (`&d=<DANE>` sigue aceptándose y solo hace falta si un código apuntara a dos sedes.)
 
-La página trae del backend la lista de estudiantes de ese colegio y, por cada uno, el colegio
-marca **Sigue / Ya no está en el colegio**. Si sigue, el **curso y la jornada de 2026**;
-si ya no está, **qué pasó**. El envío reescribe las filas de ese colegio en la pestaña
-`ConfirmacionesLista` y deja una fila de auditoría en `ConfirmacionesLog`.
+**La lista NO llega en blanco.** Desde el 9-sep-2026 viene pre-llenada con el rastreo del
+SIMAT de agosto 2026: de los 3.235 estudiantes, 2.882 (89 %) ya están ubicados. Al colegio se
+le pide **confirmar y corregir**, no llenar. En promedio le quedan **menos de 4 estudiantes**
+por responder. Ese cambio es la razón de ser de esta versión: la campaña anterior no la usó
+nadie porque el pedido parecía enorme.
 
-Diseñada para que un coordinador la termine en pocos minutos, desde el celular:
+La página trae del backend la lista de estudiantes de ese colegio y, por cada uno, el colegio
+marca **Sigue / Ya no está en el colegio**. Si sigue, el **curso y la jornada de 2026**; si ya
+no está, **qué pasó**. El envío reescribe las filas de ese colegio en la pestaña
+`ConfirmacionesLista` y deja una fila de auditoría en `ConfirmacionesLog`.
 
 | | |
 |---|---|
-| **Dos vías** | el colegio elige: llenar la lista **en la pantalla**, o **descargar un .xlsx ya lleno con los nombres**, completarlo en Excel y **subirlo**. Ver abajo |
-| **Curso y jornada** | por cada estudiante que sigue: el curso de 2026 (texto libre, con el curso promovido como pista en el placeholder) y un selector de **jornada** ya puesto en la de 2025, que el colegio cambia si hace falta |
+| **Pre-llenado** | se siembra al cargar, **solo donde nadie ha respondido**: lo que el colegio contestó —en un envío anterior o en este mismo dispositivo— siempre manda |
+| **Sugerido ≠ confirmado** | las filas pre-llenadas van con borde punteado, botones en contorno y el chip *«según nuestros registros — verifique»*. Pulsar el valor sugerido lo **confirma** (no lo desmarca, como haría en una fila normal) |
+| **La nota del SIMAT** | bajo el nombre, en gris: *«SIMAT agosto 2026: Decimo · curso 1003 · jornada MAÑANA»*, o en ámbar con ⚠ cuando el estudiante no aparece o cambió de jornada o de sede |
+| **Contador honesto** | «Faltan **4** por responder de 34», nunca «0 de 34». Al terminar dice cuántas filas se aceptaron **sin revisar** |
+| **Filtro «Solo los que faltan»** | activo por defecto, con el número en el propio chip. Convierte una tarea de 34 en una de 4. Si no falta ninguno, la página abre en *Toda la lista* |
+| **Dos vías** | llenar **en la pantalla**, o **descargar un .xlsx ya lleno**, completarlo en Excel y **subirlo** |
 | **Guardar avance** | se puede enviar incompleto y seguir después con el mismo enlace |
 | **Autoguardado local** | lo marcado queda en `localStorage`; si cierran la página no se pierde |
-| **Reanudar** | al volver a entrar carga lo ya enviado al servidor y lo local (gana lo local) |
 | **Motivo de salida** | `otro_colegio` · `retiro` · `traslado_ciudad` · `nunca_estuvo` · `no_sabemos`. **No se pregunta a dónde se fue** (8-sep-2026): el colegio no lo sabe y la pregunta hacía ver la tarea más pesada de lo que es |
-| **Buscador y filtros** | Todos / Sin marcar / Siguen / Ya no están |
-| **Fecha de la visita** | **una sola fecha: la reservada, o la sugerida si el colegio no ha reservado — nunca las dos.** Sale de las mismas pestañas `Reservas`/`Asignaciones` que usa `index.html`, así que no puede desincronizarse. Si un colegio tiene varias aulas en el mismo día y hora, se colapsan en una línea. Siempre enlaza al aplicativo de reservas |
-| **Recibo** | resumen imprimible al terminar |
+| **Buscador y filtros** | Solo los que faltan / Toda la lista / Siguen / Ya no están |
+| **Fecha de la visita** | **una sola fecha: la reservada, o la sugerida si el colegio no ha reservado — nunca las dos.** Sale de las mismas pestañas `Reservas`/`Asignaciones` que usa `index.html`. Siempre enlaza al aplicativo de reservas |
+| **Recibo** | resumen imprimible al terminar, con la lista descargable para el día de la visita |
 | Celular | tarjetas, no tabla; barra fija con el progreso |
 
 **Los nombres de los estudiantes nunca están en este repo ni en la página**: viven en la
 pestaña privada `RosterEstudiantes` y el backend solo los entrega con el código correcto.
+El pre-llenado tampoco lleva rol, documento ni teléfono.
+
+### Qué se guarda de cada fila, y por qué importa
+
+`Fuente` — `colegio` si una persona tocó esa fila, `simat_sin_tocar` si la aceptó sin abrirla.
+Sin esta columna no se puede distinguir una confirmación real de un pre-llenado que nadie miró,
+y todo el ejercicio se leería como si el colegio hubiera verificado 3.235 estudiantes.
+
+`CoincideSimat` — `SI`/`NO` según si la respuesta final coincide con lo que decía el SIMAT;
+vacío cuando no había pre-llenado. **Es la matriz de concordancia**, igual que en R3: es lo que
+dice si el registro administrativo va rezagado frente a la realidad del aula. Para los que
+siguen se comparan también curso y jornada; los cursos se comparan sin ceros a la izquierda.
+
+### Los 4 estudiantes sin jornada
+
+El SIMAT ubica a 4 estudiantes en jornada **NOCTURNA** o **FIN DE SEMANA**, que no están entre
+las cuatro del formulario. Van **con la jornada vacía a propósito** — el dato está en la nota —
+así que le cuentan al colegio como «falta por responder» y alguien tiene que elegir. Por eso el
+número del aplicativo (357) es 4 más alto que el `n_por_responder` de
+`prefill_por_colegio.csv` (353); el generador de la campaña lo recalcula con la regla del
+aplicativo para que el correo y la pantalla digan lo mismo.
 
 ### La vía Excel
 
@@ -58,8 +86,9 @@ nombres de menores viajando como adjunto. Aquí el colegio **ve en pantalla lo q
 y confirma antes de enviar.
 
 La hoja `Estudiantes` sale con `#, Código, Estudiante, Curso 2025, Jornada 2025,
-¿Sigue en el colegio? (SI/NO), Curso 2026, Jornada 2026, Si ya no está: ¿qué pasó?`.
-`Jornada 2026` viene ya puesta con la de 2025. Los cursos y
+Nuestro registro (verifique), ¿Sigue en el colegio? (SI/NO), Curso 2026, Jornada 2026,
+Si ya no está: ¿qué pasó?`. **Viene ya llena con el pre-llenado del SIMAT**, y la columna
+*Nuestro registro* lleva la misma nota que se ve en pantalla. Los cursos y
 el código van forzados a texto (`t:'s'`, `z:'@'`) para que `0801` no se vuelva `801`. Una
 segunda hoja, `Instrucciones`, lista los valores aceptados.
 
@@ -72,6 +101,7 @@ segunda hoja, `Instrucciones`, lista los valores aceptados.
 | `mañana` · `Mañana` · `M` — igual con T / U / C | MAÑANA / TARDE / ÚNICA / COMPLETA |
 | `se cambió a otro colegio`, `se retiró`, o el código interno | el motivo correspondiente |
 | una columna de más (p. ej. la del destino, de la plantilla vieja) | se ignora |
+| una fila que vuelve idéntica al pre-llenado | se conserva como **sugerida**, no como respuesta del colegio |
 | jornada en blanco | la jornada de 2025 |
 
 También: encuentra la fila de encabezados aunque haya filas basura arriba (hasta 15), mapea las
@@ -96,14 +126,14 @@ visita y el total que participa. Se añaden `Ya no están` (con el motivo) y
 
 `ConfirmacionesLista` — **una fila por estudiante, siempre el estado actual** (cada envío del
 colegio reemplaza sus filas anteriores):
-`Timestamp · DANE · Colegio · RowID · Nombre · ClaseOriginal · JornadaOriginal · Continua · CursoActual · JornadaActual · Motivo · ColegioDestino · Nota · Contacto · Telefono · Estado`
+`Timestamp · DANE · Colegio · RowID · Nombre · ClaseOriginal · JornadaOriginal · Continua · CursoActual · JornadaActual · Motivo · ColegioDestino · Nota · Contacto · Telefono · Estado · Fuente · CoincideSimat`
 
 > `ColegioDestino` queda **siempre vacía** desde el 8-sep-2026. Se conservó la columna
 > para no obligar a redesplegar el Apps Script; el backend sigue aceptando el campo
 > por si vuelve.
 
 `ConfirmacionesLog` — una fila por envío, nunca se borra:
-`Timestamp · DANE · Colegio · Contacto · Telefono · Estado · N_estudiantes · N_siguen · N_salieron`
+`Timestamp · DANE · Colegio · Contacto · Telefono · Estado · N_estudiantes · N_siguen · N_salieron · N_sin_tocar · N_distintos_del_simat`
 
 > La versión anterior tenía 9 columnas y añadía filas. Al pegar el `apps-script.gs` nuevo el
 > encabezado se amplía solo; las filas viejas quedan con las columnas nuevas vacías.
@@ -128,6 +158,31 @@ Sin nombres de estudiantes. La clave vive en Propiedades del script, nunca en el
 Insumos (NO commitear — están en `Encuesta/seguimiento_largo_plazo_r1r2/reservas/`):
 - `roster_para_sheet.csv` → pestaña `RosterEstudiantes` (DANE, Codigo, RowID, Nombre, ClaseOriginal, Colegio).
 - `codigos_confirmacion.csv` → códigos y enlaces por colegio, para el mail-merge.
+
+## Actualizar la Sheet con el pre-llenado (una vez, ~5 min)
+
+⚠️ **Sin este paso la página sigue saliendo en blanco.** El pre-llenado vive en la Sheet, no
+en este repo.
+
+1. Abrir la Sheet
+   [reservas-clima-aula-seguimiento-2026](https://docs.google.com/spreadsheets/d/1ONA2z0hFj_nfXJkTeA_s7jjCBhUkOm14mNrG87ly_Z8/edit).
+2. **Borrar la pestaña `RosterEstudiantes` actual** e importar
+   `Encuesta/seguimiento_largo_plazo_r1r2/reservas/roster_para_sheet_prefill.csv`
+   (*Archivo → Importar → Subir → Insertar hoja nueva*), y renombrarla `RosterEstudiantes`.
+   Columnas A–G iguales que antes, más **H `SimatSigue` · I `SimatCurso` · J `SimatJornada` ·
+   K `SimatMotivo` · L `SimatNota`**.
+3. **Seleccionar toda la pestaña → Formato → Número → Texto sin formato.** Sin esto la Sheet
+   convierte `0801` en `801` y el curso pierde el cero.
+4. Pegar el `apps-script.gs` de este repo en *Extensiones → Apps Script* y sacar **versión
+   nueva de la misma implementación** (la URL no cambia).
+5. Comprobar:
+   ```bash
+   curl -sL ".../exec?tipo=roster&code=DG9GCV" | head -c 400
+   ```
+   Cada estudiante debe traer `simatSigue`, `simatCurso`, `simatJornada` y `simatNota`.
+
+El CSV del pre-llenado **no se commitea**: lleva nombres de estudiantes. Va de OneDrive a la
+Sheet privada, nunca a GitHub.
 
 ## Setup (una vez, ~20 min)
 

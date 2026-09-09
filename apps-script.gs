@@ -840,6 +840,11 @@ function crearTriggerDiarioLlamadas() {
 // Pestaña RosterEstudiantes (privada, cargada desde roster_para_sheet.csv):
 //   A: DANE   B: Codigo (acceso del colegio)   C: RowID
 //   D: Nombre  E: ClaseOriginal  F: Colegio  G: ClassID (DANE-JORNADA-CLASE, opcional)
+//   H: SimatSigue (SI/NO/vacío)  I: SimatCurso  J: SimatJornada
+//   K: SimatMotivo  L: SimatNota
+// Las columnas H–L son el PRE-LLENADO del rastreo SIMAT de agosto 2026: lo que ya
+// sabemos de cada estudiante. El colegio confirma o corrige, no llena en blanco.
+// ⚠ La pestaña debe estar en formato TEXTO o la Sheet convierte 0801 en 801.
 // Pestaña ConfirmacionesLista (la escribe el servidor). UNA fila por estudiante:
 //   cada envío del colegio REEMPLAZA sus filas anteriores, así la pestaña
 //   siempre es el estado actual y se puede leer directo en el análisis.
@@ -855,9 +860,17 @@ const CONFIRM_HEADER = ['Timestamp','DANE','Colegio','RowID','Nombre',
                         'ClaseOriginal','JornadaOriginal',
                         'Continua','CursoActual','JornadaActual',
                         'Motivo','ColegioDestino','Nota',
-                        'Contacto','Telefono','Estado'];
+                        'Contacto','Telefono','Estado',
+                        'Fuente','CoincideSimat'];
+// Fuente: 'colegio' si una persona tocó esa fila; 'simat_sin_tocar' si la aceptó
+//   sin abrirla. Sin esto no se puede distinguir una confirmación real de un
+//   pre-llenado que nadie miró.
+// CoincideSimat: SI/NO según si la respuesta final coincide con lo que decía el
+//   SIMAT; vacío cuando no había pre-llenado. Es la matriz de concordancia — es
+//   lo que dice si el registro administrativo va rezagado frente a la realidad.
 const LOG_HEADER = ['Timestamp','DANE','Colegio','Contacto','Telefono','Estado',
-                    'N_estudiantes','N_siguen','N_salieron'];
+                    'N_estudiantes','N_siguen','N_salieron',
+                    'N_sin_tocar','N_distintos_del_simat'];
 const JORNADAS_OK = ['MAÑANA','TARDE','ÚNICA','COMPLETA'];
 
 function normDane_(x) { return String(x || '').trim().replace(/\.0+$/, ''); }
@@ -990,7 +1003,8 @@ function getRosterForSchool_(dane, code) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(ROSTER_SHEET_NAME);
   if (!sheet || sheet.getLastRow() <= 1) return { ok: false, error: 'roster_no_cargado' };
-  const nCols  = Math.min(Math.max(sheet.getLastColumn(), 6), 7);   // G = ClassID, si existe
+  // G = ClassID, H–L = pre-llenado del rastreo SIMAT. Todas opcionales.
+  const nCols  = Math.min(Math.max(sheet.getLastColumn(), 6), 12);
   const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, nCols).getValues();
 
   // Sin DANE: buscarlo por el código. Si apunta a más de una sede, lo pedimos.
@@ -1025,8 +1039,14 @@ function getRosterForSchool_(dane, code) {
     const partes = cid.split('-');
     if (partes.length >= 3) jornada = normJornada_(partes[1]);
     if (!jornada) jornada = jornadaPorClase[claseKey_(clase)] || '';
+    const simatSigue = nCols >= 8  ? String(values[i][7]  || '').trim().toUpperCase() : '';
     rows.push({ id: String(values[i][2] || ''), nombre: String(values[i][3] || ''),
-                clase: clase, jornada: jornada });
+                clase: clase, jornada: jornada,
+                simatSigue:   (simatSigue === 'SI' || simatSigue === 'NO') ? simatSigue : '',
+                simatCurso:   nCols >= 9  ? String(values[i][8]  || '').trim() : '',
+                simatJornada: nCols >= 10 ? normJornada_(values[i][9]) : '',
+                simatMotivo:  nCols >= 11 ? String(values[i][10] || '').trim() : '',
+                simatNota:    nCols >= 12 ? String(values[i][11] || '').trim() : '' });
     colegio = String(values[i][5] || '');
   }
   if (!hayColegio) return { ok: false, error: 'colegio_no_encontrado' };
@@ -1079,7 +1099,7 @@ function confirmarLista_(body) {
 
   const MOTIVOS_OK = { otro_colegio:1, retiro:1, traslado_ciudad:1, nunca_estuvo:1, no_sabemos:1 };
   const ts = Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
-  const out = []; let nSi = 0, nNo = 0;
+  const out = []; let nSi = 0, nNo = 0, nSinTocar = 0, nDistintos = 0;
   for (let i = 0; i < items.length; i++) {
     const it = items[i] || {};
     const id = String(it.id || '');
@@ -1093,11 +1113,30 @@ function confirmarLista_(body) {
     const nota    = String(it.nota || '').trim().slice(0, 200);
     if (motivo && !MOTIVOS_OK[motivo]) motivo = 'no_sabemos';
     if (cont === 'SI') nSi++; else nNo++;
+
+    // Quién respondió esta fila: el colegio, o nadie (aceptó el pre-llenado).
+    const fuente = (String(it.fuente || '') === 'simat_sin_tocar' && byId[id].simatSigue)
+                   ? 'simat_sin_tocar' : 'colegio';
+    if (fuente === 'simat_sin_tocar') nSinTocar++;
+
+    // ¿La respuesta final coincide con lo que decía el SIMAT? Vacío si no había
+    // pre-llenado. Para los que siguen se comparan también curso y jornada.
+    let coincide = '';
+    const s = byId[id];
+    if (s.simatSigue) {
+      if (cont !== s.simatSigue) coincide = 'NO';
+      else if (cont === 'NO')    coincide = 'SI';
+      else coincide = (claseKey_(curso) === claseKey_(s.simatCurso) &&
+                       normJornada_(jornada) === s.simatJornada) ? 'SI' : 'NO';
+      if (coincide === 'NO') nDistintos++;
+    }
+
     out.push([ts, daneReal, colegio, id, byId[id].nombre,
               byId[id].clase, byId[id].jornada,
               cont, curso, jornada,
               motivo, destino, nota,
-              contacto, telefono, estado]);
+              contacto, telefono, estado,
+              fuente, coincide]);
   }
   if (!out.length) return jsonOut_({ ok: false, error: 'sin_items_validos' });
 
@@ -1120,9 +1159,11 @@ function confirmarLista_(body) {
     ls.setFrozenRows(1);
   }
   forzarTexto_(ls, LOG_HEADER.length);
-  ls.appendRow([ts, daneReal, colegio, contacto, telefono, estado, out.length, nSi, nNo]);
+  ls.appendRow([ts, daneReal, colegio, contacto, telefono, estado, out.length, nSi, nNo,
+                nSinTocar, nDistintos]);
 
-  return jsonOut_({ ok: true, guardados: out.length, siguen: nSi, salieron: nNo, estado: estado });
+  return jsonOut_({ ok: true, guardados: out.length, siguen: nSi, salieron: nNo,
+                    sin_tocar: nSinTocar, distintos_del_simat: nDistintos, estado: estado });
 }
 
 // Monitoreo interno: ?tipo=confirmaciones&key=<CONTACTOS_KEY>
@@ -1146,18 +1187,21 @@ function getEstadoConfirmaciones_() {
     const cv = cs.getRange(2, 1, cs.getLastRow() - 1, nc).getValues();
     for (let i = 0; i < cv.length; i++) {
       const k = daneKey_(cv[i][1]); if (!k) continue;
-      if (!conf[k]) conf[k] = { marcados: 0, siguen: 0, salieron: 0 };
+      if (!conf[k]) conf[k] = { marcados: 0, siguen: 0, salieron: 0, sin_tocar: 0, distintos: 0 };
       conf[k].marcados++;
       if (String(cv[i][7]) === 'SI') conf[k].siguen++; else conf[k].salieron++;
+      if (String(cv[i][16]) === 'simat_sin_tocar') conf[k].sin_tocar++;
+      if (String(cv[i][17]) === 'NO') conf[k].distintos++;
       ult[k] = String(cv[i][0]  || '');
       est[k] = String(cv[i][15] || '');
     }
   }
   const out = [];
   Object.keys(tot).forEach(function (k) {
-    const c = conf[k] || { marcados: 0, siguen: 0, salieron: 0 };
+    const c = conf[k] || { marcados: 0, siguen: 0, salieron: 0, sin_tocar: 0, distintos: 0 };
     out.push({ dane: k, colegio: nom[k], en_lista: tot[k], marcados: c.marcados,
                siguen: c.siguen, salieron: c.salieron,
+               sin_tocar: c.sin_tocar, distintos_del_simat: c.distintos,
                estado: est[k] || 'sin_empezar', ultima: ult[k] || '' });
   });
   out.sort(function (a, b) { return a.marcados - b.marcados; });

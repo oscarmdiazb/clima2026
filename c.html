@@ -82,6 +82,15 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 .alum{border:1px solid var(--linea);border-radius:10px;padding:12px;margin:9px 0;background:var(--blanco)}
 .alum.si{border-color:#9dd7b6;background:#f6fdf9}
 .alum.no{border-color:#eeb6b9;background:#fffafa}
+/* Fila pre-llenada que nadie ha revisado: NO puede verse como una respuesta del
+   colegio. Borde punteado, fondo neutro y los botones en contorno, no rellenos. */
+.alum.sug{border-style:dashed;border-color:#c9d3e0;background:#fbfcfe}
+.alum.sug .sino button.on-si{background:#eef8f2;color:var(--verde)}
+.alum.sug .sino button.on-no{background:#fdeeef;color:var(--rojo)}
+.sug-chip{display:inline-block;margin-top:5px;font-size:.72rem;font-weight:700;
+  color:#5a6675;background:#eef2f7;border:1px dashed #c9d3e0;border-radius:999px;padding:2px 9px}
+.nota-simat{display:block;font-weight:400;color:var(--mut);font-size:.79rem;margin-top:3px}
+.nota-simat.ojo{color:var(--ambar)}
 .alum-top{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
 .alum-id{color:var(--mut);font-variant-numeric:tabular-nums;font-size:.85rem;min-width:26px;padding-top:3px}
 .alum-nom{flex:1 1 220px;min-width:0;font-weight:700;line-height:1.35}
@@ -139,7 +148,7 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 <div class="wrap">
 
 <header>
-  <h1>¿Dónde están hoy los estudiantes de la lista?</h1>
+  <h1>Confirme dónde están hoy los estudiantes de la lista</h1>
   <p class="sub">Encuesta de Clima de Aula · Secretaría de Educación de Bogotá — 2026</p>
 </header>
 
@@ -170,8 +179,9 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   <div class="vias">
     <div class="via destacada">
       <h3>Opción 1 · Aquí mismo</h3>
-      <p>Marque cada estudiante en la lista de abajo. Puede guardar a medias y
-         continuar después con el mismo enlace.</p>
+      <p><b>Ya adelantamos casi toda la lista</b> con los registros oficiales de matrícula.
+         Revise lo que aparece, corrija lo que esté mal y responda los pocos que nos faltan.
+         Puede guardar a medias y continuar con el mismo enlace.</p>
     </div>
     <div class="via">
       <h3>Opción 2 · En Excel</h3>
@@ -185,8 +195,9 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
     </div>
   </div>
   <p class="excel-detalle">Solo hay que llenar tres columnas: <b>¿Sigue en el colegio?</b>
-     (SI o NO), <b>Curso 2026</b> y <b>Jornada 2026</b> — la jornada ya viene puesta con la
-     de 2025. No cambie los nombres de las columnas ni borre la columna <b>Código</b>.</p>
+     (SI o NO), <b>Curso 2026</b> y <b>Jornada 2026</b> — vienen ya llenas con nuestros
+     registros donde los tenemos. No cambie los nombres de las columnas ni borre la columna
+     <b>Código</b>.</p>
 
   <div class="msg" id="excelMsg"></div>
   <div class="msg warn" id="resumeMsg"></div>
@@ -197,8 +208,8 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
     <button class="mini sec" id="btnLimpiar">Borrar todo lo marcado</button>
   </div>
   <div class="chips" id="filtros">
-    <button class="chip on" data-f="todos">Todos</button>
-    <button class="chip" data-f="faltan">Sin marcar</button>
+    <button class="chip on" data-f="faltan" id="chipFaltan">Solo los que faltan</button>
+    <button class="chip" data-f="todos">Toda la lista</button>
     <button class="chip" data-f="si">Siguen</button>
     <button class="chip" data-f="no">Ya no están</button>
   </div>
@@ -288,9 +299,12 @@ const URL_RESERVAS = "./";   // index.html del mismo sitio: el aplicativo de res
 
 let ESTADO = {
   dane: "", code: "", colegio: "", fecha: null, fechaTipo: "", fechas: [],
-  alumnos: [],            // [{id, nombre, clase}]
-  marca: {},              // id → {continua:'SI'|'NO', curso, jornada, motivo, nota}
-  filtro: "todos", buscar: "", enviado: false
+  filtro: "faltan",
+  alumnos: [],            // [{id, nombre, clase, jornada, simat*}]
+  // id → {continua:'SI'|'NO', curso, jornada, motivo, nota, fuente, tocado}
+  //   fuente 'simat' + tocado:false = pre-llenado que nadie ha revisado todavía
+  marca: {},
+  buscar: "", enviado: false
 };
 
 /* ---------- curso del año siguiente: 0704 (2025) → 0804 (2026) ---------- */
@@ -356,18 +370,40 @@ async function cargar(code, dane){
       const p = previo[id];
       ESTADO.marca[id] = { continua: p.continua === "SI" ? "SI" : "NO",
         curso: p.curso || "", jornada: p.jornada || "", motivo: p.motivo || "",
-        nota: p.nota || "" };
+        nota: p.nota || "", fuente: "colegio", tocado: true };
     });
     const loc = leerLocal();
     if(loc && loc.marca) Object.keys(loc.marca).forEach(id => { ESTADO.marca[id] = loc.marca[id]; });
+
+    // Pre-llenado del rastreo de matrícula. SOLO donde nadie ha respondido:
+    // lo que el colegio contestó —antes o en este dispositivo— siempre manda.
+    ESTADO.alumnos.forEach(a => {
+      if(ESTADO.marca[a.id] || !a.simatSigue) return;
+      ESTADO.marca[a.id] = {
+        continua: a.simatSigue,
+        curso:   a.simatSigue === "SI" ? (a.simatCurso || "")   : "",
+        jornada: a.simatSigue === "SI" ? (a.simatJornada || "") : "",
+        motivo:  a.simatSigue === "NO" ? (a.simatMotivo || "")  : "",
+        nota: "", fuente: "simat", tocado: false
+      };
+    });
     if(data.contacto) $("inpContacto").value = data.contacto;
     if(data.telefono) $("inpTel").value      = data.telefono;
     if(loc && loc.contacto) $("inpContacto").value = loc.contacto;
     if(loc && loc.tel)      $("inpTel").value      = loc.tel;
 
+    const nPend = ESTADO.alumnos.filter(incompleto).length;
+    const nPre  = ESTADO.alumnos.filter(a => a.simatSigue).length;
     const nPrev = Object.keys(previo).length;
     const rm = $("resumeMsg");
-    if(nPrev){
+    if(!nPrev && nPre){
+      rm.innerHTML = "Ya ubicamos a <b>" + nPre + "</b> de sus <b>" + ESTADO.alumnos.length +
+        "</b> estudiantes con los registros oficiales de matrícula. " +
+        (nPend ? "Solo necesitamos que nos confirme <b>" + nPend + "</b>."
+               : "Revise que esté bien y envíe la confirmación.") +
+        "<br>Si alguno de los datos que ya trae está equivocado, corríjalo: su respuesta manda.";
+      rm.className = "msg warn";
+    }else if(nPrev){
       rm.innerHTML = "Ya nos habían enviado una confirmación de <b>" + nPrev +
         " estudiante(s)</b>. Está cargada abajo: revísela, corrija lo que cambió y vuelva a enviar.";
       rm.className = "msg warn";
@@ -379,6 +415,9 @@ async function cargar(code, dane){
 
     pintarCabecera();
     pintarSugerencias();
+    // Si el pre-llenado ya lo cubrió todo, no tiene sentido abrir en un filtro vacío.
+    if(!ESTADO.alumnos.some(incompleto)) ESTADO.filtro = "todos";
+    sincronizarChips();
     pintar();
     $("loginCard").classList.add("hidden");
     $("listCard").classList.remove("hidden");
@@ -452,7 +491,7 @@ function pintarSugerencias(){
 /* ================= PINTAR LA LISTA ================= */
 function visible(a){
   const m = ESTADO.marca[a.id];
-  if(ESTADO.filtro === "faltan" && m) return false;
+  if(ESTADO.filtro === "faltan" && !incompleto(a)) return false;
   if(ESTADO.filtro === "si" && (!m || m.continua !== "SI")) return false;
   if(ESTADO.filtro === "no" && (!m || m.continua !== "NO")) return false;
   if(ESTADO.buscar){
@@ -479,8 +518,10 @@ function pintar(){
 
 function fila(a, num){
   const m   = ESTADO.marca[a.id] || null;
+  const sugerida = !!(m && m.fuente === "simat" && !m.tocado);
   const div = document.createElement("div");
-  div.className = "alum" + (m ? (m.continua === "SI" ? " si" : " no") : "");
+  div.className = "alum" + (m ? (m.continua === "SI" ? " si" : " no") : "")
+                         + (sugerida ? " sug" : "");
   div.dataset.id = a.id;
 
   const sug = cursoPromovido(a.clase);
@@ -488,7 +529,11 @@ function fila(a, num){
     '<div class="alum-id">' + num + '</div>' +
     '<div class="alum-nom">' + esc(a.nombre) +
       '<small>En 2025: curso ' + esc(a.clase || "—") +
-      (a.jornada ? " · jornada " + esc(a.jornada.toLowerCase()) : "") + '</small></div>' +
+      (a.jornada ? " · jornada " + esc(a.jornada.toLowerCase()) : "") +
+      (a.simatNota ? '<span class="nota-simat' + (a.simatNota.indexOf("⚠") > -1 ? " ojo" : "") +
+                     '">' + esc(a.simatNota) + '</span>' : "") +
+      (sugerida ? '<span class="sug-chip">según nuestros registros — verifique</span>' : "") +
+      '</small></div>' +
     '<div class="sino">' +
       '<button type="button" data-v="SI" class="' + (m && m.continua === "SI" ? "on-si" : "") + '">Sigue</button>' +
       '<button type="button" data-v="NO" class="' + (m && m.continua === "NO" ? "on-no" : "") + '">Ya no está en el colegio</button>' +
@@ -516,30 +561,35 @@ function fila(a, num){
   div.querySelectorAll(".sino button").forEach(b => b.addEventListener("click", () => {
     const v   = b.dataset.v;
     const cur = ESTADO.marca[a.id];
-    if(cur && cur.continua === v){ delete ESTADO.marca[a.id]; }   // segundo clic = desmarcar
-    else{
+    if(cur && cur.continua === v && cur.fuente === "simat" && !cur.tocado){
+      cur.tocado = true; cur.fuente = "colegio";   // pulsar lo sugerido = confirmarlo
+    }else if(cur && cur.continua === v){
+      delete ESTADO.marca[a.id];                    // segundo clic = desmarcar
+    }else{
       ESTADO.marca[a.id] = {
         continua: v,
         curso:   v === "SI" ? ((cur && cur.curso) || "") : "",
         jornada: v === "SI" ? ((cur && cur.jornada) || a.jornada || "") : "",
         motivo:  v === "NO" ? ((cur && cur.motivo) || "") : "",
-        nota: ""
+        nota: "", fuente: "colegio", tocado: true
       };
     }
     guardarLocal(); pintarSugerencias(); repintarFila(a.id);
   }));
 
+  const tocar = () => { const m2 = ESTADO.marca[a.id];
+    if(m2){ m2.tocado = true; m2.fuente = "colegio"; } };
   const ci = div.querySelector(".curso-in");
   if(ci) ci.addEventListener("input", () => {
-    ESTADO.marca[a.id].curso = ci.value.trim(); guardarLocal(); progreso();
+    ESTADO.marca[a.id].curso = ci.value.trim(); tocar(); guardarLocal(); progreso();
   });
   const ji = div.querySelector(".jornada-in");
   if(ji) ji.addEventListener("change", () => {
-    ESTADO.marca[a.id].jornada = ji.value; guardarLocal(); progreso();
+    ESTADO.marca[a.id].jornada = ji.value; tocar(); guardarLocal(); progreso();
   });
   const mi = div.querySelector(".motivo-in");
   if(mi) mi.addEventListener("change", () => {
-    ESTADO.marca[a.id].motivo = mi.value; guardarLocal(); progreso();
+    ESTADO.marca[a.id].motivo = mi.value; tocar(); guardarLocal(); progreso();
   });
   return div;
 }
@@ -557,6 +607,16 @@ function repintarFila(id){
 }
 
 /* ================= PROGRESO ================= */
+// Una fila "falta por responder" si no se puede enviar como está: sin marcar, o
+// marcada pero incompleta. Es el mismo criterio del contador, del filtro y del
+// número que va en el correo, para que los tres digan lo mismo.
+function incompleto(a){
+  const m = ESTADO.marca[a.id];
+  if(!m) return true;
+  if(m.continua === "SI" && (!String(m.curso || "").trim() || !m.jornada)) return true;
+  if(m.continua === "NO" && !m.motivo) return true;
+  return false;
+}
 function faltantes(){
   const sinMarcar = [], sinCurso = [], sinJornada = [], sinMotivo = [];
   ESTADO.alumnos.forEach(a => {
@@ -568,22 +628,24 @@ function faltantes(){
   });
   return { sinMarcar, sinCurso, sinJornada, sinMotivo };
 }
+// El contador dice lo que de verdad falta por hacer, no cuántas casillas hay
+// llenas: la mayoría vienen pre-llenadas y contarlas como logro sería mentir.
 function progreso(){
-  const tot = ESTADO.alumnos.length;
-  const f   = faltantes();
-  const listos = tot - f.sinMarcar.length;
-  $("btnPlan").classList.toggle("hidden", listos === 0);
-  $("barFill").style.width = tot ? Math.round(100 * listos / tot) + "%" : "0%";
-  if(f.sinMarcar.length === 0 && f.sinCurso.length === 0 &&
-     f.sinJornada.length === 0 && f.sinMotivo.length === 0){
-    $("barTxt").innerHTML = "<b>✓ Listo:</b> los " + tot + " estudiantes están marcados.";
+  const tot     = ESTADO.alumnos.length;
+  const pend    = ESTADO.alumnos.filter(incompleto).length;
+  const sinRev  = ESTADO.alumnos.filter(a => { const m = ESTADO.marca[a.id];
+                    return m && m.fuente === "simat" && !m.tocado; }).length;
+  $("btnPlan").classList.toggle("hidden", pend === tot);
+  $("barFill").style.width = tot ? Math.round(100 * (tot - pend) / tot) + "%" : "0%";
+  const chip = $("chipFaltan");
+  if(chip) chip.textContent = pend ? "Solo los que faltan (" + pend + ")" : "Ya no falta ninguno";
+  if(pend === 0){
+    $("barTxt").innerHTML = "<b>✓ No falta ninguno.</b>" +
+      (sinRev ? " <span style='color:var(--mut)'>" + sinRev +
+                " vienen de nuestros registros, sin revisar.</span>" : "");
   }else{
-    const p = [];
-    if(f.sinMarcar.length) p.push("faltan <b>" + f.sinMarcar.length + "</b> por marcar");
-    if(f.sinCurso.length)  p.push("<b>" + f.sinCurso.length + "</b> sin curso 2026");
-    if(f.sinJornada.length)p.push("<b>" + f.sinJornada.length + "</b> sin jornada");
-    if(f.sinMotivo.length) p.push("<b>" + f.sinMotivo.length + "</b> sin motivo");
-    $("barTxt").innerHTML = listos + " de " + tot + " — <span class='pending'>" + p.join(" · ") + "</span>";
+    $("barTxt").innerHTML = "Faltan <span class='pending'><b>" + pend +
+      "</b> por responder</span> de " + tot + ".";
   }
 }
 
@@ -594,7 +656,8 @@ function recolectar(){
     const m = ESTADO.marca[a.id];
     if(!m) return;
     out.push({ id: a.id, continua: m.continua, curso: m.curso || "",
-               jornada: m.jornada || "", motivo: m.motivo || "", nota: m.nota || "" });
+               jornada: m.jornada || "", motivo: m.motivo || "", nota: m.nota || "",
+               fuente: (m.fuente === "simat" && !m.tocado) ? "simat_sin_tocar" : "colegio" });
   });
   return out;
 }
@@ -609,8 +672,8 @@ async function enviar(estado){
   const f = faltantes();
   if(estado === "final"){
     if(f.sinMarcar.length){
-      $("sendErr").innerHTML = "Faltan <b>" + f.sinMarcar.length + "</b> estudiantes por marcar. " +
-        "Use el filtro <b>Sin marcar</b> para verlos, o pulse <b>Guardar avance</b> y siga después.";
+      $("sendErr").innerHTML = "Faltan <b>" + f.sinMarcar.length + "</b> estudiantes por responder. " +
+        "Están abajo, en <b>Solo los que faltan</b>. También puede pulsar <b>Guardar avance</b> y seguir después.";
       $("sendErr").style.display = "block";
       ESTADO.filtro = "faltan"; sincronizarChips(); pintar();
       window.scrollTo({ top: 0, behavior: "smooth" }); return;
@@ -619,17 +682,17 @@ async function enviar(estado){
       $("sendErr").innerHTML = "Hay <b>" + f.sinCurso.length + "</b> estudiante(s) marcados <b>Sigue</b> sin curso de 2026. " +
         "Si no sabe el curso exacto, escriba solo el grado (p. ej. <b>8</b>).";
       $("sendErr").style.display = "block";
-      ESTADO.filtro = "si"; sincronizarChips(); pintar(); return;
+      ESTADO.filtro = "faltan"; sincronizarChips(); pintar(); return;
     }
     if(f.sinJornada.length){
       $("sendErr").innerHTML = "Hay <b>" + f.sinJornada.length + "</b> estudiante(s) marcados <b>Sigue</b> sin jornada.";
       $("sendErr").style.display = "block";
-      ESTADO.filtro = "si"; sincronizarChips(); pintar(); return;
+      ESTADO.filtro = "faltan"; sincronizarChips(); pintar(); return;
     }
     if(f.sinMotivo.length){
       $("sendErr").innerHTML = "Hay <b>" + f.sinMotivo.length + "</b> estudiante(s) marcados <b>Ya no está en el colegio</b> sin decir qué pasó.";
       $("sendErr").style.display = "block";
-      ESTADO.filtro = "no"; sincronizarChips(); pintar(); return;
+      ESTADO.filtro = "faltan"; sincronizarChips(); pintar(); return;
     }
   }
   const contacto = $("inpContacto").value.trim();
@@ -713,9 +776,10 @@ function cargarSheetJS(){
   return sheetjsCargando;
 }
 
-const COL = { num:0, id:1, nombre:2, clase25:3, jor25:4, sigue:5, curso26:6, jor26:7,
-              motivo:8 };
+const COL = { num:0, id:1, nombre:2, clase25:3, jor25:4, registro:5,
+              sigue:6, curso26:7, jor26:8, motivo:9 };
 const ENCABEZADOS = ["#","Código","Estudiante","Curso 2025","Jornada 2025",
+                     "Nuestro registro (verifique)",
                      "¿Sigue en el colegio? (SI/NO)","Curso 2026","Jornada 2026",
                      "Si ya no está: ¿qué pasó?"];
 
@@ -737,8 +801,9 @@ async function descargarExcel(){
     ESTADO.alumnos.forEach((a, i) => {
       const m = ESTADO.marca[a.id] || {};
       filas.push([ i + 1, a.id, a.nombre, a.clase || "", a.jornada || "",
+                   a.simatNota || "",
                    m.continua || "", m.curso || "",
-                   m.jornada || a.jornada || "",
+                   m.jornada || "",
                    m.motivo ? (MOTIVOS.find(x => x[0] === m.motivo) || ["",""])[1] : "" ]);
     });
     const hoja = XLSX.utils.aoa_to_sheet(filas);
@@ -749,7 +814,7 @@ async function descargarExcel(){
         if(hoja[ref]){ hoja[ref].t = "s"; hoja[ref].z = "@"; }
       });
     }
-    hoja["!cols"] = [{wch:4},{wch:9},{wch:38},{wch:11},{wch:13},
+    hoja["!cols"] = [{wch:4},{wch:9},{wch:38},{wch:11},{wch:13},{wch:52},
                      {wch:26},{wch:12},{wch:16},{wch:30}];
     hoja["!autofilter"] = { ref: XLSX.utils.encode_range(
       { s:{r:0,c:0}, e:{r:filas.length-1, c:ENCABEZADOS.length-1} }) };
@@ -757,12 +822,16 @@ async function descargarExcel(){
     const guia = [
       ["Encuesta de Clima de Aula 2026 — cómo llenar esta hoja"],
       [""],
-      ["1.", "Llene solo tres columnas: «¿Sigue en el colegio?», «Curso 2026» y «Jornada 2026»."],
-      ["2.", "«¿Sigue en el colegio?» se responde con SI o con NO."],
-      ["3.", "«Jornada 2026» ya viene con la de 2025. Cámbiela solo si cambió."],
-      ["4.", "Si respondió NO, marque «¿qué pasó?». Nada más."],
-      ["5.", "No cambie los nombres de las columnas ni borre la columna «Código»."],
-      ["6.", "Guarde el archivo y súbalo en la misma página donde lo descargó."],
+      ["Importante:", "La hoja ya viene llena con los registros oficiales de matrícula. " +
+                      "Solo hay que revisarla, corregir lo que esté mal y completar las filas vacías."],
+      [""],
+      ["1.", "Mire «Nuestro registro (verifique)»: dice lo que sabemos de cada estudiante."],
+      ["2.", "Si está bien, no toque nada. Si está mal, corrija «Curso 2026» o «Jornada 2026»."],
+      ["3.", "Las filas con «¿Sigue en el colegio?» vacía son las que nos faltan: respóndalas."],
+      ["4.", "«¿Sigue en el colegio?» se responde con SI o con NO."],
+      ["5.", "Si respondió NO, marque «¿qué pasó?». Nada más."],
+      ["6.", "No cambie los nombres de las columnas ni borre la columna «Código»."],
+      ["7.", "Guarde el archivo y súbalo en la misma página donde lo descargó."],
       [""],
       ["Valores para «Jornada 2026»:", JORNADAS.filter(j => j[0]).map(j => j[0]).join("  ·  ")],
       ["Valores para «¿qué pasó?»:",   MOTIVOS.filter(m => m[0]).map(m => m[1]).join("  ·  ")]
@@ -828,6 +897,7 @@ function mapearColumnas(filas){
       if(mapa.id      === undefined && celda.indexOf("codigo") > -1)  mapa.id = c;
       if(mapa.nombre  === undefined && celda.indexOf("estudiante") > -1) mapa.nombre = c;
       if(mapa.sigue   === undefined && celda.indexOf("sigue") > -1)   mapa.sigue = c;
+      // «Nuestro registro» es solo informativa: se ignora al leer.
       if(mapa.curso26 === undefined && celda.indexOf("curso 2026") > -1) mapa.curso26 = c;
       if(mapa.jor26   === undefined && celda.indexOf("jornada 2026") > -1) mapa.jor26 = c;
       if(mapa.motivo  === undefined && celda.indexOf("que paso") > -1) mapa.motivo = c;
@@ -872,15 +942,22 @@ async function subirExcel(archivo){
 
       const sigue = leerSiNo(cab.mapa.sigue !== undefined ? fila[cab.mapa.sigue] : "");
       if(!sigue){ vacios++; continue; }
+      const curso   = String(cab.mapa.curso26 !== undefined ? fila[cab.mapa.curso26] : "").trim();
+      const jornada = leerJornada(cab.mapa.jor26 !== undefined ? fila[cab.mapa.jor26] : "");
+      const motivo  = leerMotivo(cab.mapa.motivo !== undefined ? fila[cab.mapa.motivo] : "");
+      // Si la fila vuelve idéntica al pre-llenado, nadie la revisó de verdad: se
+      // conserva como sugerida, para no contarla como respuesta del colegio.
+      const igualAlSimat = !!a.simatSigue && a.simatSigue === sigue && (
+        sigue === "NO" ? (!motivo || motivo === (a.simatMotivo || ""))
+                       : (curso === (a.simatCurso || "") && jornada === (a.simatJornada || "")));
+      const fte = igualAlSimat ? "simat" : "colegio";
       if(sigue === "SI"){
-        ESTADO.marca[a.id] = { continua: "SI",
-          curso: String(cab.mapa.curso26 !== undefined ? fila[cab.mapa.curso26] : "").trim(),
-          jornada: leerJornada(cab.mapa.jor26 !== undefined ? fila[cab.mapa.jor26] : "") || a.jornada || "",
-          motivo: "", nota: "" };
+        ESTADO.marca[a.id] = { continua: "SI", curso: curso,
+          jornada: jornada || a.simatJornada || a.jornada || "",
+          motivo: "", nota: "", fuente: fte, tocado: !igualAlSimat };
       }else{
         ESTADO.marca[a.id] = { continua: "NO", curso: "", jornada: "",
-          motivo: leerMotivo(cab.mapa.motivo !== undefined ? fila[cab.mapa.motivo] : ""),
-          nota: "" };
+          motivo: motivo, nota: "", fuente: fte, tocado: !igualAlSimat };
       }
       leidos++;
     }
