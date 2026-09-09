@@ -46,9 +46,9 @@ no está, **qué pasó**. El envío reescribe las filas de ese colegio en la pes
 | **Dos vías** | llenar **en la pantalla**, o **descargar un .xlsx ya lleno**, completarlo en Excel y **subirlo** |
 | **Guardar avance** | se puede enviar incompleto y seguir después con el mismo enlace |
 | **Autoguardado local** | lo marcado queda en `localStorage`; si cierran la página no se pierde |
-| **Motivo de salida** | `otro_colegio` · `retiro` · `traslado_ciudad` · `nunca_estuvo` · `no_sabemos`. **No se pregunta a dónde se fue** (8-sep-2026): el colegio no lo sabe y la pregunta hacía ver la tarea más pesada de lo que es |
+| **«Ya no está» es un solo clic** | al colegio no se le pregunta nada más: ni a dónde se fue (quitado el 8-sep) ni por qué (quitado el 9-sep). El motivo que queda en la Sheet es el del rastreo (`otro_colegio` para los 463 que el SIMAT ubica en otro colegio), no algo que el colegio escriba |
 | **Buscador y filtros** | Solo los que faltan / Toda la lista / Siguen / Ya no están |
-| **Fecha de la visita** | **una sola fecha: la reservada, o la sugerida si el colegio no ha reservado — nunca las dos.** Sale de las mismas pestañas `Reservas`/`Asignaciones` que usa `index.html`. Siempre enlaza al aplicativo de reservas |
+| **Fecha de la visita** | **solo día y hora — nunca el curso.** El curso de la reserva es el de 2025 y los estudiantes ya no están ahí; verlo hacía pensar que la encuesta se aplica en ese salón, que es justo lo contrario. **Una sola fecha: la reservada, o la sugerida si no han reservado — nunca las dos.** Sale de las mismas pestañas `Reservas`/`Asignaciones` que usa `index.html`. Siempre enlaza al aplicativo de reservas |
 | **Recibo** | resumen imprimible al terminar, con la lista descargable para el día de la visita |
 | Celular | tarjetas, no tabla; barra fija con el progreso |
 
@@ -88,8 +88,8 @@ nombres de menores viajando como adjunto. Aquí el colegio **ve en pantalla lo q
 y confirma antes de enviar.
 
 La hoja `Estudiantes` sale con `#, Código, Estudiante, Curso 2025, Jornada 2025,
-Nuestro registro (verifique), ¿Sigue en el colegio? (SI/NO), Curso 2026, Jornada 2026,
-Si ya no está: ¿qué pasó?`. **Viene ya llena con el pre-llenado del SIMAT**, y la columna
+Nuestro registro (verifique), ¿Sigue en el colegio? (SI/NO), Curso 2026, Jornada 2026`.
+**Viene ya llena con el pre-llenado del SIMAT**, y la columna
 *Nuestro registro* lleva la misma nota que se ve en pantalla. Los cursos y
 el código van forzados a texto (`t:'s'`, `z:'@'`) para que `0801` no se vuelva `801`. Una
 segunda hoja, `Instrucciones`, lista los valores aceptados.
@@ -101,7 +101,6 @@ segunda hoja, `Instrucciones`, lista los valores aceptados.
 | `si` · `SÍ` · `S` · `x` · `1` · `sigue` | SI |
 | `no` · `N` · `0` · `ya no está` · `retirado` | NO |
 | `mañana` · `Mañana` · `M` — igual con T / U / C | MAÑANA / TARDE / ÚNICA / COMPLETA |
-| `se cambió a otro colegio`, `se retiró`, o el código interno | el motivo correspondiente |
 | una columna de más (p. ej. la del destino, de la plantilla vieja) | se ignora |
 | una fila que vuelve idéntica al pre-llenado | se conserva como **sugerida**, no como respuesta del colegio |
 | jornada en blanco | la jornada de 2025 |

@@ -203,8 +203,8 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
   </div>
   <p class="excel-detalle">Solo hay que llenar tres columnas: <b>¿Sigue en el colegio?</b>
      (SI o NO), <b>Curso 2026</b> y <b>Jornada 2026</b> — vienen ya llenas con nuestros
-     registros donde los tenemos. No cambie los nombres de las columnas ni borre la columna
-     <b>Código</b>.</p>
+     registros donde los tenemos. Si un estudiante ya no está, basta con escribir NO.
+     No cambie los nombres de las columnas ni borre la columna <b>Código</b>.</p>
 
   <div class="msg" id="excelMsg"></div>
   <div class="msg warn" id="resumeMsg"></div>
@@ -447,13 +447,12 @@ function fechaBonita(iso){
 
 // El backend entrega O la fecha reservada O la sugerida, nunca las dos
 // mezcladas (la reserva manda). Aquí solo se pinta lo que llegue.
+// Solo fecha y hora. NO se pone el curso: el de la reserva es el de 2025 y los
+// estudiantes ya no están ahí — verlo hace pensar que la encuesta se aplica en
+// ese salón, que es justo lo contrario de lo que pasa.
 function lineaFecha(f){
-  const aula = [f.clase ? "curso " + f.clase : "",
-                f.jornada ? "jornada " + f.jornada.toLowerCase() : ""].filter(Boolean).join(", ");
   return "<div style='margin-top:4px'>\uD83D\uDCC5&nbsp;<b>" + esc(fechaBonita(f.fecha)) + "</b>" +
-    (f.hora ? " a las " + esc(f.hora) : "") +
-    (aula ? " <span style='font-weight:400'>· " + esc(aula) + "</span>" : "") +
-    "</div>";
+    (f.hora ? " a las " + esc(f.hora) : "") + "</div>";
 }
 
 function cajaFecha(el){
@@ -474,6 +473,14 @@ function cajaFecha(el){
     "<div style='margin-top:8px'><a href='" + URL_RESERVAS + "' style='color:inherit;font-weight:700'>" +
     (reservada ? "Ver o cambiar la fecha en el aplicativo de reservas →"
                : "Reservar la hora en el aplicativo de reservas →") + "</a></div>";
+}
+
+// La nota viene del rastreo y todavía pide «díganos qué pasó», de cuando el
+// formulario tenía el menú de motivo. Se reescribe al mostrarla en vez de
+// regenerar el CSV y volver a importar la pestaña.
+function limpiarNota(t){
+  return String(t || "").replace(/Por favor d[ií]ganos qu[eé] pas[oó]\.?/gi,
+                                 "Por favor díganos si sigue o no en el colegio.");
 }
 
 function pintarCabecera(){
@@ -524,7 +531,7 @@ function pintar(){
     const c1 = document.createElement("div");
     c1.className = "corte arriba";
     c1.innerHTML = "⚠️ <b>Estos " + faltan.length + " nos faltan.</b> No los encontramos en los " +
-      "registros de matrícula: díganos si siguen o no en el colegio.";
+      "registros de matrícula: solo díganos si siguen o no en el colegio.";
     cont.appendChild(c1);
   }
   faltan.forEach(x => cont.appendChild(fila(x.a, x.num)));
@@ -557,7 +564,7 @@ function fila(a, num){
       '<small>En 2025: curso ' + esc(a.clase || "—") +
       (a.jornada ? " · jornada " + esc(a.jornada.toLowerCase()) : "") +
       (a.simatNota ? '<span class="nota-simat' + (a.simatNota.indexOf("⚠") > -1 ? " ojo" : "") +
-                     '">' + esc(a.simatNota) + '</span>' : "") +
+                     '">' + esc(limpiarNota(a.simatNota)) + '</span>' : "") +
       (sugerida ? '<span class="sug-chip">según nuestros registros — verifique</span>' : "") +
       '</small></div>' +
     '<div class="sino">' +
@@ -571,14 +578,6 @@ function fila(a, num){
       '<input type="text" class="curso-in" list="cursosSug" placeholder="Curso, p. ej. ' + esc(sug || "802") + '" value="' + esc(m.curso || "") + '">' +
       '<select class="jornada-in">' +
         JORNADAS.map(j => '<option value="' + j[0] + '"' + (m.jornada === j[0] ? " selected" : "") + '>' + esc(j[1]) + '</option>').join("") +
-      '</select>' +
-    '</div></div>';
-  }
-  if(m && m.continua === "NO"){
-    html += '<div class="detalle"><div class="row">' +
-      '<div class="lbl">¿Qué pasó con este estudiante?</div>' +
-      '<select class="motivo-in">' +
-        MOTIVOS.map(o => '<option value="' + o[0] + '"' + (m.motivo === o[0] ? " selected" : "") + '>' + esc(o[1]) + '</option>').join("") +
       '</select>' +
     '</div></div>';
   }
@@ -613,10 +612,6 @@ function fila(a, num){
   if(ji) ji.addEventListener("change", () => {
     ESTADO.marca[a.id].jornada = ji.value; tocar(); guardarLocal(); progreso();
   });
-  const mi = div.querySelector(".motivo-in");
-  if(mi) mi.addEventListener("change", () => {
-    ESTADO.marca[a.id].motivo = mi.value; tocar(); guardarLocal(); progreso();
-  });
   return div;
 }
 
@@ -640,19 +635,17 @@ function incompleto(a){
   const m = ESTADO.marca[a.id];
   if(!m) return true;
   if(m.continua === "SI" && (!String(m.curso || "").trim() || !m.jornada)) return true;
-  if(m.continua === "NO" && !m.motivo) return true;
-  return false;
+  return false;   // marcar "ya no está" basta: no se le pide nada más al colegio
 }
 function faltantes(){
-  const sinMarcar = [], sinCurso = [], sinJornada = [], sinMotivo = [];
+  const sinMarcar = [], sinCurso = [], sinJornada = [];
   ESTADO.alumnos.forEach(a => {
     const m = ESTADO.marca[a.id];
     if(!m){ sinMarcar.push(a); return; }
     if(m.continua === "SI" && !String(m.curso || "").trim()) sinCurso.push(a);
     if(m.continua === "SI" && !m.jornada) sinJornada.push(a);
-    if(m.continua === "NO" && !m.motivo) sinMotivo.push(a);
   });
-  return { sinMarcar, sinCurso, sinJornada, sinMotivo };
+  return { sinMarcar, sinCurso, sinJornada };
 }
 // El contador dice lo que de verdad falta por hacer, no cuántas casillas hay
 // llenas: la mayoría vienen pre-llenadas y contarlas como logro sería mentir.
@@ -712,11 +705,6 @@ async function enviar(estado){
     }
     if(f.sinJornada.length){
       $("sendErr").innerHTML = "Hay <b>" + f.sinJornada.length + "</b> estudiante(s) marcados <b>Sigue</b> sin jornada.";
-      $("sendErr").style.display = "block";
-      ESTADO.filtro = "faltan"; sincronizarChips(); pintar(); return;
-    }
-    if(f.sinMotivo.length){
-      $("sendErr").innerHTML = "Hay <b>" + f.sinMotivo.length + "</b> estudiante(s) marcados <b>Ya no está en el colegio</b> sin decir qué pasó.";
       $("sendErr").style.display = "block";
       ESTADO.filtro = "faltan"; sincronizarChips(); pintar(); return;
     }
@@ -803,11 +791,10 @@ function cargarSheetJS(){
 }
 
 const COL = { num:0, id:1, nombre:2, clase25:3, jor25:4, registro:5,
-              sigue:6, curso26:7, jor26:8, motivo:9 };
+              sigue:6, curso26:7, jor26:8 };
 const ENCABEZADOS = ["#","Código","Estudiante","Curso 2025","Jornada 2025",
                      "Nuestro registro (verifique)",
-                     "¿Sigue en el colegio? (SI/NO)","Curso 2026","Jornada 2026",
-                     "Si ya no está: ¿qué pasó?"];
+                     "¿Sigue en el colegio? (SI/NO)","Curso 2026","Jornada 2026"];
 
 function mensajeExcel(clase, html){
   const el = $("excelMsg");
@@ -827,10 +814,8 @@ async function descargarExcel(){
     ESTADO.alumnos.forEach((a, i) => {
       const m = ESTADO.marca[a.id] || {};
       filas.push([ i + 1, a.id, a.nombre, a.clase || "", a.jornada || "",
-                   a.simatNota || "",
-                   m.continua || "", m.curso || "",
-                   m.jornada || "",
-                   m.motivo ? (MOTIVOS.find(x => x[0] === m.motivo) || ["",""])[1] : "" ]);
+                   limpiarNota(a.simatNota),
+                   m.continua || "", m.curso || "", m.jornada || "" ]);
     });
     const hoja = XLSX.utils.aoa_to_sheet(filas);
     // Todo como texto: si no, Excel convierte 0801 en 801.
@@ -841,7 +826,7 @@ async function descargarExcel(){
       });
     }
     hoja["!cols"] = [{wch:4},{wch:9},{wch:38},{wch:11},{wch:13},{wch:52},
-                     {wch:26},{wch:12},{wch:16},{wch:30}];
+                     {wch:26},{wch:12},{wch:16}];
     hoja["!autofilter"] = { ref: XLSX.utils.encode_range(
       { s:{r:0,c:0}, e:{r:filas.length-1, c:ENCABEZADOS.length-1} }) };
 
@@ -854,13 +839,11 @@ async function descargarExcel(){
       ["1.", "Mire «Nuestro registro (verifique)»: dice lo que sabemos de cada estudiante."],
       ["2.", "Si está bien, no toque nada. Si está mal, corrija «Curso 2026» o «Jornada 2026»."],
       ["3.", "Las filas con «¿Sigue en el colegio?» vacía son las que nos faltan: respóndalas."],
-      ["4.", "«¿Sigue en el colegio?» se responde con SI o con NO."],
-      ["5.", "Si respondió NO, marque «¿qué pasó?». Nada más."],
-      ["6.", "No cambie los nombres de las columnas ni borre la columna «Código»."],
-      ["7.", "Guarde el archivo y súbalo en la misma página donde lo descargó."],
+      ["4.", "«¿Sigue en el colegio?» se responde con SI o con NO. Si es NO, nada más."],
+      ["5.", "No cambie los nombres de las columnas ni borre la columna «Código»."],
+      ["6.", "Guarde el archivo y súbalo en la misma página donde lo descargó."],
       [""],
-      ["Valores para «Jornada 2026»:", JORNADAS.filter(j => j[0]).map(j => j[0]).join("  ·  ")],
-      ["Valores para «¿qué pasó?»:",   MOTIVOS.filter(m => m[0]).map(m => m[1]).join("  ·  ")]
+      ["Valores para «Jornada 2026»:", JORNADAS.filter(j => j[0]).map(j => j[0]).join("  ·  ")]
     ];
     const hg = XLSX.utils.aoa_to_sheet(guia);
     hg["!cols"] = [{wch:28},{wch:80}];
@@ -1000,7 +983,6 @@ async function subirExcel(archivo){
     if(noReconocidos.length) avisos.push(noReconocidos.length +
       " fila(s) que no están en la lista (" + esc(noReconocidos.slice(0, 3).join(", ")) + ")");
     if(f.sinCurso.length)  avisos.push(f.sinCurso.length + " sin curso 2026");
-    if(f.sinMotivo.length) avisos.push(f.sinMotivo.length + " sin decir qué pasó");
     if(avisos.length) html += "<br><br>Quedaron pendientes: " + avisos.join(" · ") +
       ". Complételos aquí mismo en la pantalla.";
     mensajeExcel(avisos.length ? "warn" : "ok", html);
