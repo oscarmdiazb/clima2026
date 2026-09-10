@@ -231,7 +231,9 @@ function getContactos_() {
       sede:      String(row[6] || ''),
       dane:      String(row[7] || ''),
       contacto:  String(row[8] || ''),   // columna I
-      telefono:  String(row[9] || '')    // columna J
+      telefono:  String(row[9] || ''),   // columna J
+      direccion: String(row[10] || ''),  // columna K — la escribió el colegio al reservar
+      email:     String(row[11] || '')   // columna L
     });
   }
   return out;
