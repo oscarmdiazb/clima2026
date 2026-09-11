@@ -6,3 +6,6 @@ Final Treatment Assignment Round 3.csv
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Python
+__pycache__/
