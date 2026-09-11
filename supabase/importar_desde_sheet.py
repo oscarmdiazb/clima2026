@@ -72,11 +72,37 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dump", required=True)
     ap.add_argument("--solo", default="")
+    ap.add_argument("--reservas-vivas", action="store_true",
+                    help="reservas: bajarlas del Apps Script viejo (?tipo=contactos) en vez del CSV, para no perder las de última hora")
     a = ap.parse_args()
     D = Path(a.dump)
     quiere = lambda t: not a.solo or a.solo == t
 
-    if quiere("clima_reservas"):
+    if quiere("clima_reservas") and a.reservas_vivas:
+        # Fuente más fresca: el Apps Script viejo, con contactos (necesita la clave privada).
+        APP = ("https://script.google.com/macros/s/"
+               "AKfycbwIiL2aerUdsTfoMR4NS-due9HTZxoEvvd2fiUYYuXH4Ppro5xQ_-Wx037eO6HpfYvyjQ/exec")
+        clave = (PROY / "Encuesta" / "seguimiento_largo_plazo_r1r2" / "seguimiento" / ".contactos_key").read_text().strip()
+        import urllib.parse
+        with urllib.request.urlopen(f"{APP}?tipo=contactos&key={urllib.parse.quote(clave)}", timeout=120) as f:
+            j = json.load(f)
+        assert j.get("ok"), j
+        # El Apps Script no devuelve el Timestamp: se toma del CSV del volcado cuando coincide (aula+slot).
+        ts_csv = {}
+        try:
+            for r in leer(D / "reservas.csv"):
+                ts_csv[(r["DANE"], r["Jornada"], r["Clase"], norm_slot(r["Slot"]))] = ts_bogota(r["Timestamp"])
+        except FileNotFoundError:
+            pass
+        out = []
+        for r in j["contactos"]:
+            slot = norm_slot(r["slot"])
+            out.append({"ts": ts_csv.get((r["dane"], r["jornada"], r["clase"], slot)) or dt.datetime.now().isoformat(),
+                        "slot": slot, "localidad": r["localidad"], "colegio": r["colegio"], "jornada": r["jornada"],
+                        "clase": r["clase"], "sede": r["sede"], "dane": r["dane"], "contacto": r["contacto"],
+                        "telefono": r["telefono"], "direccion": r["direccion"], "email": r.get("email", "")})
+        vaciar("clima_reservas"); insertar("clima_reservas", out)
+    elif quiere("clima_reservas"):
         rows = leer(D / "reservas.csv"); out = []
         for r in rows:
             if not r["Slot"].strip(): continue
