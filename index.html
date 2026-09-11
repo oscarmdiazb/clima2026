@@ -1841,22 +1841,6 @@
     <div class="aula-warning" id="rosterWarning"></div>
 
     <!-- El grupo ya tiene una reserva -->
-    <!-- Aviso de pausa: el grupo no tiene reserva y las reservas nuevas están pausadas -->
-    <div class="already-booked" id="pausedBox" hidden style="border-color:#f59e0b;background:#fffbeb">
-      <div class="already-booked-icon" style="background:#f59e0b">⏸</div>
-      <div style="flex:1">
-        <div class="already-booked-title">Las reservas están pausadas por unos días</div>
-        <div class="already-booked-help" style="margin-top:6px">
-          Estamos ajustando el calendario de visitas. Por ahora <strong>no es necesario reservar</strong>:
-          en los próximos días les escribiremos con la nueva fecha propuesta para su institución y el
-          enlace para confirmar la hora. Gracias por su paciencia.
-        </div>
-        <div class="already-booked-help">
-          ¿Tienes alguna duda? Escríbenos al <a href="https://wa.me/573019597822" target="_blank" rel="noopener" class="wa-inline-link">WhatsApp del proyecto</a>.
-        </div>
-      </div>
-    </div>
-
     <div class="already-booked" id="alreadyBookedBox" hidden>
       <div class="already-booked-icon">✓</div>
       <div style="flex:1">
@@ -2189,12 +2173,6 @@ const TIMEZONE = "America/Bogota";
 // Inclusive of both endpoints. Bogota local time. Month is 0-indexed.
 const WINDOW_START = new Date(2026, 8, 15);  // Sep 15, 2026 (martes)
 const WINDOW_END   = new Date(2026, 9, 30);  // Oct 30, 2026 (viernes) — nov reservado a revisitas
-
-// Pausa de reservas NUEVAS (sep-2026): mientras esté en true, un grupo que aún no
-// tiene reserva ve un aviso y no puede elegir fecha. Los grupos que ya reservaron
-// conservan su cita y pueden reprogramarla. Poner en false para reabrir.
-// IMPORTANT: la misma bandera vive en apps-script.gs (RESERVAS_PAUSADAS) — mantener en sincronía.
-const RESERVAS_PAUSADAS = true;
 
 const DAY_NAMES = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -2573,7 +2551,6 @@ function showStep(state) {
 function showStep2View(view) {
   currentStep2View = view;
   document.getElementById('alreadyBookedBox').hidden       = view !== 'already-booked';
-  document.getElementById('pausedBox').hidden              = view !== 'paused';
   document.getElementById('assignedBanner').hidden         = view !== 'day-chips';
   document.getElementById('dayChipsContainer').hidden      = view !== 'day-chips';
   document.getElementById('weekFallbackContainer').hidden  = view !== 'week-fallback';
@@ -2581,7 +2558,6 @@ function showStep2View(view) {
   // step2 title
   const title = document.getElementById('step2Title');
   if      (view === 'already-booked') title.textContent = 'Estado de tu reserva';
-  else if (view === 'paused')         title.textContent = 'Reservas pausadas';
   else if (view === 'day-chips')      title.textContent = 'Elige la hora';
   else if (view === 'week-fallback')  title.textContent = 'Si el colegio no puede en la fecha propuesta, elige otra fecha';
   else                                title.textContent = 'Elige día y hora';
@@ -2608,12 +2584,6 @@ function setupStep2ForSelectedAula() {
   if (existing) {
     showStep2View('already-booked');
     document.getElementById('alreadyBookedTime').textContent = humanizeSlotKey(existing);
-    return;
-  }
-
-  // 2) Reservas nuevas pausadas → aviso, sin selector de fecha.
-  if (RESERVAS_PAUSADAS) {
-    showStep2View('paused');
     return;
   }
 
@@ -3059,7 +3029,13 @@ function getAssignedDateFor(sel) {
   if (!v) return null;
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
   if (!m) return null;
-  return new Date(+m[1], +m[2] - 1, +m[3]);
+  let d = new Date(+m[1], +m[2] - 1, +m[3]);
+  // Si la fecha asignada cae en un día bloqueado (p. ej. la semana del 14–18 sep,
+  // cerrada por trámite jurídico), se corre al mismo día de la semana siguiente
+  // hasta caer en un día abierto. Respaldo por si la Sheet aún trae la fecha vieja.
+  let guard = 0;
+  while (isBlockedDate(d) && guard++ < 10) d = addDays(d, 7);
+  return d;
 }
 
 // Date → "martes 12 de agosto"
@@ -3338,10 +3314,6 @@ async function submitBooking() {
       await refresh();
       selectedSlot = null;
       showStep('pick-slot');
-      if (getSelectedColegio()) setupStep2ForSelectedAula();
-    } else if (res && res.error === 'reservas_pausadas') {
-      showToast('Las reservas están pausadas por unos días. Les escribiremos con la nueva fecha.', 'error');
-      selectedSlot = null;
       if (getSelectedColegio()) setupStep2ForSelectedAula();
     } else if (res && res.error === 'aula_already_booked') {
       // Someone (the same user from another tab, or staff) booked first.
