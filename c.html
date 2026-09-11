@@ -277,7 +277,7 @@ button.mini{padding:7px 12px;font-size:.85rem;border-radius:7px}
 <datalist id="cursosSug"></datalist>
 
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIiL2aerUdsTfoMR4NS-due9HTZxoEvvd2fiUYYuXH4Ppro5xQ_-Wx037eO6HpfYvyjQ/exec"; // misma URL que index.html
+// Backend (Supabase): apiGet / apiPost vienen de sb-config.js, el mismo que usa index.html.
 
 const $ = id => document.getElementById(id);
 const qs = n => new URLSearchParams(location.search).get(n) || "";
@@ -346,10 +346,9 @@ async function cargar(code, dane){
   const err = $("loginErr"); err.style.display = "none";
   const btn = $("btnLoad"); btn.disabled = true; btn.textContent = "Cargando…";
   try{
-    let url = APPS_SCRIPT_URL + "?tipo=roster&code=" + encodeURIComponent(code);
-    if(dane) url += "&dane=" + encodeURIComponent(dane);
-    const res  = await fetch(url);
-    const data = await res.json();
+    let q = "tipo=roster&code=" + encodeURIComponent(code);
+    if(dane) q += "&dane=" + encodeURIComponent(dane);
+    const data = await apiGet(q);
     if(!data.ok){
       const msgs = {
         codigo_invalido:      "El código no coincide con este colegio. Revíselo en el correo.",
@@ -721,15 +720,11 @@ async function enviar(estado){
   const antes = estado === "final" ? b1.textContent : b2.textContent;
   (estado === "final" ? b1 : b2).textContent = "Enviando…";
   try{
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
+    const data = await apiPost({
         action: "confirmar_lista", dane: ESTADO.dane, code: ESTADO.code,
         contacto: contacto, telefono: $("inpTel").value.trim(),
         estado: estado, items: items
-      })
     });
-    const data = await res.json();
     if(!data.ok) throw new Error(data.error || "error");
     if(estado === "final"){ mostrarRecibo(data.guardados); }
     else{

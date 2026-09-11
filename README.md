@@ -185,7 +185,40 @@ en este repo.
 El CSV del pre-llenado **no se commitea**: lleva nombres de estudiantes. Va de OneDrive a la
 Sheet privada, nunca a GitHub.
 
-## Setup (una vez, ~20 min)
+## Backend: Supabase (desde el 11-sep-2026)
+
+El backend ya **no** es la Google Sheet + Apps Script. Es el proyecto Supabase «oscar-apps»
+(ref `sxfbzcnsbcvitaenwpct`), tablas `clima_*`, y dos funciones RPC que replican la API
+del Apps Script con las mismas formas de JSON (los clientes casi no cambiaron):
+
+| Antes (Apps Script) | Ahora (Supabase) |
+|---|---|
+| `GET …/exec?tipo=…&key=…&code=…&dane=…` | `GET  {SUPABASE_URL}/rest/v1/rpc/api_get?tipo=…` |
+| `POST …/exec` con el JSON | `POST {SUPABASE_URL}/rest/v1/rpc/api_post` con el JSON (header `Prefer: params=single-object`) |
+
+Cabeceras en toda llamada: `apikey: <anon>` y `Authorization: Bearer <anon>`.
+
+- **`sb-config.js`** — único lugar con `SUPABASE_URL` y `SUPABASE_ANON_KEY`, más los helpers
+  `apiGet(query)` / `apiPost(body)` que usan `index.html` y `c.html`. Los scripts de Python
+  (`Encuesta/seguimiento_largo_plazo_r1r2/clima_api.py`, `publicar_equipo.py`) lo leen de aquí.
+  La anon key es pública por diseño: solo puede llamar a `api_get`/`api_post`; las tablas tienen
+  RLS sin políticas y no se pueden leer directo.
+- **Esquema y lógica**: `~/oscar-personal-apps/supabase/migrations/20260911170000_clima2026.sql`.
+  Tablas `clima_reservas`, `clima_asignaciones`, `clima_facilitadores`, `clima_roster`,
+  `clima_confirmaciones`, `clima_confirmaciones_log`, `clima_config`.
+- **Parámetros** (antes constantes del script) en `clima_config`: `capacity`, `team_block_min`,
+  `blocked_dates` (JSON) y `contactos_key` (la clave privada de `?tipo=contactos` /
+  `?tipo=confirmaciones`; la misma de `seguimiento/.contactos_key`). Cambiar una fecha bloqueada
+  es un `update clima_config …`, sin redesplegar nada. **Ojo:** `index.html` tiene su propia copia
+  de `BLOCKED_DATES` para pintar el calendario — mantener las dos en sincronía.
+- **Consultas / cambios a mano**: `~/.claude/skills/supabase-apps/scripts/db.sh "select …"`.
+  Ejemplos: mover una fecha asignada →
+  `update clima_asignaciones set fecha='2026-09-22' where dane='…' and jornada='…' and clase='…'`.
+- **Carga inicial** desde la Sheet: `supabase/importar_desde_sheet.py --dump <carpeta con los CSV>`
+  (idempotente; usa la service key de `~/oscar-personal-apps/.env.supabase`).
+- `apps-script.gs` queda solo como referencia histórica. La Sheet ya no se escribe.
+
+## Setup (una vez, ~20 min) — VERSIÓN VIEJA (Apps Script), solo referencia
 
 1. Sheet nueva → `Extensions → Apps Script` → pegar `apps-script.gs` → correr `setup`.
 2. Importar `roster_para_sheet.csv` como pestaña `RosterEstudiantes` (File → Import → Insert new sheet, renombrar). Forzar columna DANE a texto plano.

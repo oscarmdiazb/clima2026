@@ -1788,7 +1788,7 @@
   </section>
 
   <div id="configWarning" class="config-warning" style="display:none">
-    ⚠️ La URL de Apps Script no está configurada. Edita la constante <code>APPS_SCRIPT_URL</code> en <code>index.html</code>.
+    ⚠️ El backend no está configurado. Pega la anon key en <code>sb-config.js</code>.
   </div>
 
   <!-- =================================================================
@@ -2139,6 +2139,7 @@
   </div>
 </div>
 
+<script src="sb-config.js"></script>
 <script src="schools.js"></script>
 <script>
 // =====================================================================
@@ -2147,7 +2148,7 @@
 
 // 1) Paste your Apps Script Web App deployment URL here.
 //    Deploy → New deployment → Web app → Execute as: me, Who has access: Anyone.
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIiL2aerUdsTfoMR4NS-due9HTZxoEvvd2fiUYYuXH4Ppro5xQ_-Wx037eO6HpfYvyjQ/exec"; // despliegue NUEVO (Sheet propia del seguimiento) — ver SETUP.md
+// El backend (Supabase) y sus helpers apiGet/apiPost viven en sb-config.js (cargado arriba).
 
 // 2) School list — generated from "Final Treatment Assignment Round 3.csv".
 //    Each localidad maps to an array of { colegio, sede, jornada, clase, grado, dane }.
@@ -2334,30 +2335,16 @@ function cuposLeftToStart(date, hour, minute) {
 
 // ----- Network -----
 function isConfigured() {
-  return APPS_SCRIPT_URL && APPS_SCRIPT_URL !== "PASTE_DEPLOYMENT_URL_HERE";
+  return typeof SUPABASE_ANON_KEY === 'string' && SUPABASE_ANON_KEY !== "PEGAR_ANON_KEY";
 }
 
 async function fetchBookings() {
   if (!isConfigured()) return { ok: true, bookings: {} };
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: 'GET',
-    mode: 'cors',
-    redirect: 'follow'
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
+  return await apiGet('');
 }
 
 async function postBooking(payload) {
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'cors',
-    redirect: 'follow',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
+  return await apiPost(payload);
 }
 
 // ----- Render helpers -----
@@ -3177,7 +3164,7 @@ function closeConfirmModalAndReset() {
 // Reschedule an existing reservation to the newly-picked slot.
 async function submitReschedule(sel) {
   if (!selectedSlot) return showFormError('No hay un horario seleccionado.');
-  if (!isConfigured()) return showFormError('La URL de Apps Script no está configurada.');
+  if (!isConfigured()) return showFormError('El backend no está configurado.');
 
   // Soft check: warn if moving off the assigned date.
   const assignedDate = getAssignedDateFor(sel);
@@ -3278,7 +3265,7 @@ async function submitBooking() {
   }
 
   if (!isConfigured()) {
-    return showFormError('La URL de Apps Script no está configurada. Edita APPS_SCRIPT_URL en index.html.');
+    return showFormError('El backend no está configurado (sb-config.js).');
   }
   if (!selectedSlot) {
     return showFormError('No hay un horario seleccionado.');
