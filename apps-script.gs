@@ -28,7 +28,12 @@ const ASSIGNMENTS_SHEET_NAME = 'Asignaciones';
 const CAPACITY = 4;
 // Días sin clase dentro de la ventana (receso estudiantil + festivo).
 // IMPORTANT: la misma lista vive en index.html — mantener en sincronía.
-const BLOCKED_DATES = ['2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09','2026-10-12'];
+// Pausa de reservas NUEVAS (sep-2026). true = doPost rechaza reservas de colegios
+// con error 'reservas_pausadas'. Reprogramaciones (reschedule) y visitas extra del
+// equipo (dane EXTRA) siguen funcionando. Misma bandera en index.html.
+const RESERVAS_PAUSADAS = true;
+const BLOCKED_DATES = ['2026-09-14','2026-09-15','2026-09-16','2026-09-17','2026-09-18', // semana 14–18 sep: sin reservas nuevas (trámite jurídico pendiente)
+  '2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09','2026-10-12'];
 const TIMEZONE = 'America/Bogota';
 const SLOT_DURATION_HOURS = 2;
 // Minutes the team needs after a session before it can take another booking
@@ -134,6 +139,9 @@ function doPost(e) {
     }
     if (BLOCKED_DATES.indexOf(slot.slice(0, 10)) !== -1) {
       return jsonOut_({ ok: false, error: 'fecha_bloqueada' });
+    }
+    if (RESERVAS_PAUSADAS && dane.indexOf('EXTRA') !== 0) {
+      return jsonOut_({ ok: false, error: 'reservas_pausadas' });
     }
     if (!/^\d{7,15}$/.test(phone)) {
       return jsonOut_({ ok: false, error: 'invalid_phone' });
