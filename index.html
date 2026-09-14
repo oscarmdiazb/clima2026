@@ -1523,6 +1523,43 @@
   }
   .btn-otherday:hover { background: #fef3c7; }
 
+  /* Pregunta bajo la fecha asignada: dos botones del mismo tamaño */
+  .date-choice {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 560px) { .date-choice { grid-template-columns: 1fr; } }
+  .choice-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    border-radius: 12px;
+    padding: 16px 12px;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.1s, box-shadow 0.15s;
+  }
+  .choice-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.10); }
+  .choice-main { font-size: 16px; font-weight: 800; }
+  .choice-sub  { font-size: 12.5px; font-weight: 600; opacity: 0.85; }
+  .choice-yes { background: #ecfdf5; border: 2px solid #34d399; color: #065f46; }
+  .choice-no  { background: #fffbeb; border: 2px solid #f59e0b; color: #92400e; }
+  .choice-yes.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .choice-btn[hidden] { display: none !important; }
+  .date-choice.single { grid-template-columns: 1fr; }
+  .assigned-hours-help { font-size: 13px; color: var(--muted); font-weight: 600; margin: 0 0 12px; }
+
+  /* Chip de la fecha asignada dentro de "todas las fechas" */
+  .chip.day-chip.is-assigned { box-shadow: 0 0 0 2px var(--primary); }
+  .day-chip-tag {
+    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    background: var(--primary); color: #fff; border-radius: 999px; padding: 1px 6px; margin-bottom: 2px;
+  }
+
   /* Calendar buttons inside the confirmation modal */
   .cm-cal-actions {
     display: flex;
@@ -1744,7 +1781,7 @@
       <li>
         <div class="how-icon" aria-hidden="true">2</div>
         <div class="how-text">
-          <strong>Elige la hora en esa fecha.</strong> Si el colegio realmente no puede ese día, hay opción de elegir otro día de la misma semana — pero agradecemos cumplir la fecha asignada por logística.
+          <strong>Elige la hora en esa fecha, o cambia la fecha.</strong> Si el colegio no puede ese día, puedes elegir cualquier otra fecha con cupo. Por logística, agradecemos mantener la fecha asignada cuando sea posible.
         </div>
       </li>
       <li>
@@ -1859,53 +1896,50 @@
     <div class="assigned-banner" id="assignedBanner" hidden>
       <div class="assigned-banner-label">Tu fecha asignada es</div>
       <div class="assigned-banner-date" id="assignedBannerDate">—</div>
-      <div class="assigned-banner-help">Elige el bloque de clases (la hora) que mejor le quede al colegio ese día para reunir a los estudiantes de la lista.</div>
+      <div class="assigned-banner-help" id="assignedBannerQuestion">¿El colegio puede recibir la encuesta ese día?</div>
     </div>
 
-    <!-- Chips de horas para el día asignado -->
+    <!-- Día asignado: primero la pregunta (hora o cambiar fecha), después las horas -->
     <div id="dayChipsContainer" hidden>
       <div class="assigned-full-warning" id="assignedFullWarning" hidden>
-        ⚠️ Tu fecha asignada ya no tiene cupos disponibles. Por favor elige otra fecha más abajo.
+        ⚠️ Tu fecha asignada ya no tiene cupos disponibles. Por favor elige otra fecha.
       </div>
-      <div class="chip-section" id="morningSection">
-        <h3 class="chip-section-label">Jornada mañana</h3>
-        <div class="chip-grid" id="morningChips"></div>
+      <div class="date-choice" id="dateChoice">
+        <button type="button" class="choice-btn choice-yes" id="chooseHourBtn">
+          <span class="choice-main">✅ Sí puede: elegir la hora</span>
+          <span class="choice-sub">en la fecha asignada</span>
+        </button>
+        <button type="button" class="choice-btn choice-no" id="showWeekBtn">
+          <span class="choice-main">📅 No puede: cambiar la fecha</span>
+          <span class="choice-sub">ver todas las fechas con cupo</span>
+        </button>
       </div>
-      <div class="chip-section" id="afternoonSection">
-        <h3 class="chip-section-label">Jornada tarde</h3>
-        <div class="chip-grid" id="afternoonChips"></div>
+      <div id="assignedHours" hidden>
+        <p class="assigned-hours-help">Elige el bloque de clases (la hora) que mejor le quede al colegio para reunir a los estudiantes de la lista.</p>
+        <div class="chip-section" id="morningSection">
+          <h3 class="chip-section-label">Jornada mañana</h3>
+          <div class="chip-grid" id="morningChips"></div>
+        </div>
+        <div class="chip-section" id="afternoonSection">
+          <h3 class="chip-section-label">Jornada tarde</h3>
+          <div class="chip-grid" id="afternoonChips"></div>
+        </div>
       </div>
-      <button type="button" class="btn-otherday" id="showWeekBtn">
-        📅 ¿El colegio NO puede ese día? Haz clic aquí para reservar otro día
-      </button>
     </div>
 
-    <!-- Fallback semana: dos sub-pasos (elegir día → elegir hora) -->
+    <!-- Cambiar fecha: todas las fechas de la ventana → elegir hora -->
     <div id="weekFallbackContainer" hidden>
       <div class="fallback-header">
-        <h3>Otro día de tu semana — <span id="weekFallbackLabel">—</span></h3>
+        <h3>Elige la nueva fecha</h3>
         <button type="button" class="btn-link" id="hideWeekBtn">← Volver a la fecha asignada</button>
       </div>
 
-      <!-- Sub-paso A: elegir día de la semana asignada -->
-      <div id="weekDaysPicker">
-        <h4 class="chip-section-label">Elige el día</h4>
-        <div class="chip-grid day-chip-grid" id="weekDaysChips"></div>
-        <button type="button" class="btn-otherday" id="showAllDatesBtn">
-          📅 ¿Tampoco puede esta semana? Haz clic aquí para ver todas las fechas
-        </button>
-      </div>
-
-      <!-- Sub-paso B: elegir entre TODAS las fechas de la ventana -->
-      <div id="allDatesPicker" hidden>
-        <div class="picked-day-header">
-          <span class="picked-day-label">Todas las fechas disponibles</span>
-          <button type="button" class="btn-link" id="backToWeekDaysBtn">← Volver a mi semana</button>
-        </div>
+      <!-- Sub-paso A: elegir entre TODAS las fechas de la ventana -->
+      <div id="allDatesPicker">
         <div id="allDatesByWeek"></div>
       </div>
 
-      <!-- Sub-paso C: elegir hora del día escogido -->
+      <!-- Sub-paso B: elegir hora del día escogido -->
       <div id="weekHoursPicker" hidden>
         <div class="picked-day-header">
           <span class="picked-day-label" id="pickedDayLabel">—</span>
@@ -2545,8 +2579,8 @@ function showStep2View(view) {
   // step2 title
   const title = document.getElementById('step2Title');
   if      (view === 'already-booked') title.textContent = 'Estado de tu reserva';
-  else if (view === 'day-chips')      title.textContent = 'Elige la hora';
-  else if (view === 'week-fallback')  title.textContent = 'Si el colegio no puede en la fecha propuesta, elige otra fecha';
+  else if (view === 'day-chips')      title.textContent = 'Elige la hora o cambia la fecha';
+  else if (view === 'week-fallback')  title.textContent = 'Cambia la fecha';
   else                                title.textContent = 'Elige día y hora';
 }
 
@@ -2586,16 +2620,16 @@ function showSlotPickerForAula(sel) {
     showStep2View('day-chips');
     document.getElementById('assignedBannerDate').textContent = formatDateLongShort(assignedDate);
     renderDayChips(assignedDate);
+    // Primero solo la pregunta; las horas aparecen al elegir "Sí puede".
+    setAssignedHoursVisible_(false);
     const availOnAssigned = countAvailableSlotsOnDay_(assignedDate);
-    const fullWarn = document.getElementById('assignedFullWarning');
-    const showWeekBtn = document.getElementById('showWeekBtn');
-    if (availOnAssigned === 0) {
-      fullWarn.hidden = false;
-      showWeekBtn.textContent = '📅 Ver otras fechas disponibles';
-    } else {
-      fullWarn.hidden = true;
-      showWeekBtn.textContent = '📅 ¿El colegio NO puede ese día? Haz clic aquí para reservar otro día';
-    }
+    const isFull = availOnAssigned === 0;
+    document.getElementById('assignedFullWarning').hidden = !isFull;
+    document.getElementById('assignedBannerQuestion').hidden = isFull;
+    document.getElementById('chooseHourBtn').hidden = isFull;
+    document.getElementById('dateChoice').classList.toggle('single', isFull);
+    document.querySelector('#showWeekBtn .choice-main').textContent =
+      isFull ? '📅 Ver otras fechas disponibles' : '📅 No puede: cambiar la fecha';
     return;
   }
   // No assignment → full calendar with week-nav.
@@ -2660,9 +2694,15 @@ function renderDayChips(date) {
   renderHourChipsInto_(date, 'morningChips', 'afternoonChips');
 }
 
+// Muestra u oculta las horas del día asignado y marca el botón "Sí puede".
+function setAssignedHoursVisible_(visible) {
+  document.getElementById('assignedHours').hidden = !visible;
+  document.getElementById('chooseHourBtn').classList.toggle('active', visible);
+}
+
 // =====================================================================
-// Week-fallback flow: two sub-steps.
-//   A) renderWeekDayPicker(monday) — chips para Lun–Vie (excepto festivos)
+// "Cambiar fecha" flow: two sub-steps.
+//   A) renderAllDatesPicker()     — todas las fechas de la ventana, por semana
 //   B) renderWeekHoursPicker(date) — chips de horas (igual estilo que día asignado)
 // =====================================================================
 
@@ -2679,24 +2719,23 @@ function countAvailableSlotsOnDay_(date) {
   return n;
 }
 
-// Which sub-view of the week-fallback is visible.
-let hoursPickerSource = 'week'; // 'week' | 'all' — where the hours picker was opened from
-
+// Which sub-view of the "cambiar fecha" flow is visible: 'all' | 'hours'.
 function showWeekSub(sub) {
-  document.getElementById('weekDaysPicker').hidden  = sub !== 'week';
   document.getElementById('allDatesPicker').hidden  = sub !== 'all';
   document.getElementById('weekHoursPicker').hidden = sub !== 'hours';
 }
 
-// Builds one day-chip. `source` ('week' | 'all') is remembered so the hours
-// picker's "← Cambiar día" returns to the right place.
-function buildDayChip_(d, source) {
+// Builds one day-chip. The assigned date carries a "Tu fecha" tag.
+function buildDayChip_(d, assignedDate) {
   const isInWin = isInWindow(d);
   const availCount = countAvailableSlotsOnDay_(d);
   const chip = document.createElement('button');
   chip.type = 'button';
   chip.className = 'chip day-chip';
+  const isAssigned = !!assignedDate && d.getTime() === assignedDate.getTime();
+  if (isAssigned) chip.classList.add('is-assigned');
   chip.innerHTML =
+    (isAssigned ? `<span class="day-chip-tag">Tu fecha</span>` : '') +
     `<span class="day-chip-name">${DAY_NAMES[d.getDay()]}</span>` +
     `<span class="day-chip-date">${d.getDate()} ${MONTH_ABBR[d.getMonth()]}</span>` +
     `<span class="day-chip-meta"></span>`;
@@ -2711,26 +2750,23 @@ function buildDayChip_(d, source) {
     if (availCount <= 4) chip.classList.add('low');
     else if (availCount <= 12) chip.classList.add('partial');
     meta.textContent = `${availCount} ${availCount === 1 ? 'horario' : 'horarios'}`;
-    chip.addEventListener('click', () => renderWeekHoursPicker(d, source));
+    chip.addEventListener('click', () => renderWeekHoursPicker(d));
   }
   return chip;
 }
 
-function renderWeekDayPicker(monday) {
-  document.getElementById('weekFallbackLabel').textContent = formatWeekRange(monday);
-  const wrap = document.getElementById('weekDaysChips');
-  wrap.innerHTML = '';
-  const days = [0,1,2,3,4].map(i => addDays(monday, i));
-  for (const d of days) wrap.appendChild(buildDayChip_(d, 'week'));
-}
-
 // Renders every week in the window, each as a labeled block of 5 day-chips.
+// Weeks with no open day at all (past, receso, blocked) are skipped.
 function renderAllDatesPicker() {
   const container = document.getElementById('allDatesByWeek');
   container.innerHTML = '';
+  const sel = getSelectedColegio();
+  const assignedDate = sel ? getAssignedDateFor(sel) : null;
   let m = windowFirstMonday();
   const end = windowLastMonday();
   while (m.getTime() <= end.getTime()) {
+    const days = [0,1,2,3,4].map(i => addDays(m, i));
+    if (!days.some(d => countAvailableSlotsOnDay_(d) > 0)) { m = addDays(m, 7); continue; }
     const block = document.createElement('div');
     block.className = 'week-block';
     const h = document.createElement('h4');
@@ -2739,15 +2775,14 @@ function renderAllDatesPicker() {
     block.appendChild(h);
     const grid = document.createElement('div');
     grid.className = 'chip-grid day-chip-grid';
-    [0,1,2,3,4].map(i => addDays(m, i)).forEach(d => grid.appendChild(buildDayChip_(d, 'all')));
+    days.forEach(d => grid.appendChild(buildDayChip_(d, assignedDate)));
     block.appendChild(grid);
     container.appendChild(block);
     m = addDays(m, 7);
   }
 }
 
-function renderWeekHoursPicker(date, source) {
-  hoursPickerSource = source || 'week';
+function renderWeekHoursPicker(date) {
   showWeekSub('hours');
   document.getElementById('pickedDayLabel').textContent = formatDateLongShort(date);
   // Render chips into the week-fallback morning/afternoon containers
@@ -3707,40 +3742,37 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Step 2 sub-view toggles ---
-  function openWeekDays() {
-    const sel = getSelectedColegio();
-    const assignedDate = sel ? getAssignedDateFor(sel) : null;
-    // If there's an assigned date use its week; otherwise fall back to the
-    // first window week (e.g., when the assigned date is full we still anchor
-    // the day picker on the assigned week).
-    const monday = assignedDate ? startOfWeekMonday(assignedDate) : windowFirstMonday();
-    renderWeekDayPicker(monday);
-    showWeekSub('week');
-  }
-
-  document.getElementById('showWeekBtn').addEventListener('click', () => {
-    showStep2View('week-fallback');
-    openWeekDays();
-  });
-  document.getElementById('hideWeekBtn').addEventListener('click', () => {
-    showStep2View('day-chips');
-  });
-  // "Tampoco puedo esta semana → ver todas las fechas"
-  document.getElementById('showAllDatesBtn').addEventListener('click', () => {
+  function openAllDates() {
     renderAllDatesPicker();
     showWeekSub('all');
+  }
+
+  // "Sí puede" → horas del día asignado
+  document.getElementById('chooseHourBtn').addEventListener('click', () => {
+    setAssignedHoursVisible_(true);
+    document.getElementById('assignedHours').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
-  // From all-dates back to the assigned week's day picker
-  document.getElementById('backToWeekDaysBtn').addEventListener('click', openWeekDays);
-  // From hours back to wherever we came from (week days or all dates)
-  document.getElementById('backToDayPickerBtn').addEventListener('click', () => {
-    if (hoursPickerSource === 'all') {
-      renderAllDatesPicker();
-      showWeekSub('all');
-    } else {
-      openWeekDays();
-    }
+  // "No puede" → todas las fechas con cupo
+  document.getElementById('showWeekBtn').addEventListener('click', () => {
+    // Evita chips duplicados (mismo id) si luego elige la fecha asignada desde la lista.
+    document.getElementById('morningChips').innerHTML = '';
+    document.getElementById('afternoonChips').innerHTML = '';
+    selectedSlot = null;
+    showStep('pick-slot');
+    showStep2View('week-fallback');
+    openAllDates();
+    document.getElementById('step2Card').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+  document.getElementById('hideWeekBtn').addEventListener('click', () => {
+    document.getElementById('weekMorningChips').innerHTML = '';
+    document.getElementById('weekAfternoonChips').innerHTML = '';
+    selectedSlot = null;
+    showStep('pick-slot');
+    const sel = getSelectedColegio();
+    if (sel) showSlotPickerForAula(sel); else showStep2View('day-chips');
+  });
+  // From hours back to the all-dates list
+  document.getElementById('backToDayPickerBtn').addEventListener('click', openAllDates);
 
   // --- Full-calendar fallback nav (only used when no assignment) ---
   document.getElementById('weekJump').addEventListener('change', (e) => {
