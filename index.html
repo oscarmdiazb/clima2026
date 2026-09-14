@@ -2508,7 +2508,7 @@ function renderCalendar() {
       btn.className = 'slot';
 
       // Schools that have already booked this exact start time
-      const slotBookings = bookingDetails[key] || [];
+      const slotBookings = (bookingDetails[key] || []).filter(isSeguimientoBooking_);
 
       if (outsideWindow) {
         btn.classList.add('past');
@@ -3375,6 +3375,13 @@ function shortDate_(d) {
   return `${DAY_NAMES[d.getDay()].slice(0,3)}. ${d.getDate()} ${MONTH_ABBR[d.getMonth()]}`;
 }
 
+// Visitas extra (dane EXTRA / EXTRA-R3 / EXTRA-R3REV: Ronda 3, revisitas, encuesta
+// base) comparten calendario y cupos, pero no se listan en esta página: la tabla y
+// el calendario de abajo muestran solo Seguimiento. El resto está en la consola.
+function isSeguimientoBooking_(r) {
+  return !String((r && r.dane) || '').trim().toUpperCase().startsWith('EXTRA');
+}
+
 function renderReservationsTable() {
   const body = document.getElementById('reservationsBody');
   const summary = document.getElementById('reservationsSummary');
@@ -3384,7 +3391,7 @@ function renderReservationsTable() {
   const rows = [];
   const colegioCount = {};
   for (const slotK of Object.keys(bookingDetails)) {
-    const list = bookingDetails[slotK] || [];
+    const list = (bookingDetails[slotK] || []).filter(isSeguimientoBooking_);
     for (const r of list) {
       const colegio = r.colegio || '';
       colegioCount[colegio] = (colegioCount[colegio] || 0) + 1;
@@ -3588,7 +3595,7 @@ function renderMonthCalendars() {
     const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(slotK);
     if (!m) continue;
     const dateStr = `${m[1]}-${m[2]}-${m[3]}`;
-    const list = bookingDetails[slotK] || [];
+    const list = (bookingDetails[slotK] || []).filter(isSeguimientoBooking_);
     for (const r of list) {
       (byDate[dateStr] = byDate[dateStr] || []).push({
         colegio: r.colegio || '', jornada: r.jornada || '', clase: r.clase || '',
