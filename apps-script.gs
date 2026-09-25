@@ -29,7 +29,8 @@ const CAPACITY = 4;
 // Días sin clase dentro de la ventana (receso estudiantil + festivo).
 // IMPORTANT: la misma lista vive en index.html — mantener en sincronía.
 const BLOCKED_DATES = ['2026-09-14','2026-09-15','2026-09-16','2026-09-17','2026-09-18', // semana 14–18 sep: sin reservas nuevas (trámite jurídico pendiente)
-  '2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09','2026-10-12'];
+  '2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09','2026-10-12',
+  '2026-11-02'];  // festivo · Día de Todos los Santos (trasladado)
 const TIMEZONE = 'America/Bogota';
 const SLOT_DURATION_HOURS = 2;
 // Minutes the team needs after a session before it can take another booking

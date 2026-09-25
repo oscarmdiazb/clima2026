@@ -2207,7 +2207,7 @@ const TIMEZONE = "America/Bogota";
 // Calendar window: only allow reservations within [WINDOW_START, WINDOW_END].
 // Inclusive of both endpoints. Bogota local time. Month is 0-indexed.
 const WINDOW_START = new Date(2026, 8, 15);  // Sep 15, 2026 (martes)
-const WINDOW_END   = new Date(2026, 9, 30);  // Oct 30, 2026 (viernes) — nov reservado a revisitas
+const WINDOW_END   = new Date(2026, 10, 6);   // Nov 6, 2026 (viernes) — se abrió la 1a semana de nov (25-sep-2026) para reagendar las visitas canceladas del 21 al 25 de sep
 
 const DAY_NAMES = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -2283,7 +2283,8 @@ function clampMondayToWindow(monday) {
 const BLOCKED_DATES = new Set([
   "2026-09-14","2026-09-15","2026-09-16","2026-09-17","2026-09-18", // semana 14–18 sep: sin reservas nuevas (trámite jurídico pendiente)
   "2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-09", // receso estudiantil
-  "2026-10-12" // festivo · Día de la Raza
+  "2026-10-12", // festivo · Día de la Raza
+  "2026-11-02"  // festivo · Día de Todos los Santos (trasladado)
 ]);
 function dateISO_(date){ return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`; }
 function isBlockedDate(date){ return BLOCKED_DATES.has(dateISO_(date)); }

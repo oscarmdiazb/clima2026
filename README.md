@@ -9,7 +9,7 @@ Fork de [`reservas-encuesta-clima-aula-2026-oce`](https://github.com/oscarmdiazb
 | Cambio | Detalle |
 |---|---|
 | Roster | 96 aulas de R1/R2 en 18 localidades (`schools.js`) |
-| Ventana | **15 sep – 30 oct 2026**. Noviembre queda reservado a revisitas y no es reservable |
+| Ventana | **15 sep – 6 nov 2026**. La 1a semana de nov se abrió el 25-sep-2026 para reagendar las visitas canceladas del 21 al 25 de sep; el resto de nov sigue reservado a revisitas |
 | Días bloqueados | Receso estudiantil (5–9 oct) y festivo 12 oct, bloqueados en frontend **y** backend (`BLOCKED_DATES`, en ambos archivos — mantener en sincronía) |
 | Fecha preasignada | Igual que el original: pestaña `Asignaciones` de la Sheet (`DANE|Jornada|Clase → fecha`). Cargar antes del envío del correo |
 | **Confirmación de listas** | **Nueva página `c.html`**: el colegio confirma qué estudiantes de su lista siguen y en qué curso están. Ver abajo |
