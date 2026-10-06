@@ -3376,8 +3376,9 @@ function shortDate_(d) {
   return `${DAY_NAMES[d.getDay()].slice(0,3)}. ${d.getDate()} ${MONTH_ABBR[d.getMonth()]}`;
 }
 
-// Visitas extra (dane EXTRA / EXTRA-R3 / EXTRA-R3REV: Ronda 3, revisitas, encuesta
-// base) comparten calendario y cupos, pero no se listan en esta página: la tabla y
+// Visitas extra (dane EXTRA / EXTRA-R3 / EXTRA-R3REV / EXTRA-SEGREV: Ronda 3,
+// revisitas de Ronda 3, revisitas del seguimiento, encuesta base) comparten
+// calendario, pero no se listan en esta página: la tabla y
 // el calendario de abajo muestran solo Seguimiento. El resto está en la consola.
 function isSeguimientoBooking_(r) {
   return !String((r && r.dane) || '').trim().toUpperCase().startsWith('EXTRA');
